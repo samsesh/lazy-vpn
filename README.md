@@ -1,7 +1,9 @@
 # lazy-vpn
+- lazy-vpn is a script that tries to make your work easier and gathers the most used vpn in one place so that you can easily set up a vpn server on your ubuntu server.
+Apart from that, it has the ability to improve the server and show the capabilities of the server
 - run 
 ```bash
-bash <[curl -sSL https://github.com/samsesh/lazy-vpn/raw/Localhost/lazy.sh]
+bash <(curl -sSL https://github.com/samsesh/lazy-vpn/raw/Localhost/lazy.sh)
 ```
 ## link 
 - [Ubuntu-Optimizer](https://github.com/samsesh/Ubuntu-Optimizer)
