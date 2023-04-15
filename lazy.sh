@@ -90,8 +90,17 @@ EOF
 
 }
 
+check_if_running_as_root() {
+    # If you want to run as another user, please modify $EUID to be owned by this user
+    if [[ "$EUID" -ne '0' ]]; then
+        echo "$(tput setaf 1)Error: You must run this script as root!$(tput sgr0)"
+        exit 1
+    fi
+}
+
 vpnserver() {
     clear
+    check_if_running_as_root
     PS3="Please select vpn server for installing: "
 
     options=("install hiddify" "install 3x-ui" "install x-ui" "install xray-reality" "install openconnect server" "install openvpn server (pritunl)" "install softether server" "install socks and http proxy server(docker base)" "back to main menu")
