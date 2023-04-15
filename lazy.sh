@@ -94,7 +94,7 @@ vpnserver() {
 
     PS3="Please select vpn server for installing: "
 
-    options=("install 3x-ui" "install x-ui" "install openconnect server" "install openvpn server (pritunl)" "Quit")
+    options=("install 3x-ui" "install x-ui" "install openconnect server" "install openvpn server (pritunl)" "install socks and http proxy server(docker base)" "Quit")
 
     select opt in "${options[@]}"; do
         case $opt in
