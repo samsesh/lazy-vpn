@@ -13,6 +13,9 @@ tmux new -s lazy "bash <(curl -sSL https://github.com/samsesh/lazy-vpn/raw/Local
 ```bash
 tmux a -d -t lazy
 ```
+## ToDo
+- [ ] add uninstaller
+- [ ] Checking the existence of a VPN server that does not interfere with the installation of other services
 ## link 
 - [hiddify](https://github.com/hiddify/hiddify-config/)
 - [3x-ui](https://github.com/MHSanaei/3x-ui)
