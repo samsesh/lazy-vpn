@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "welcome to lazy vpn script"
+echo "$(tput setaf 2)welcome to lazy vpn script$(tput sgr0)"
 
 dockercheck() {
     #install docker
@@ -52,12 +52,6 @@ sercvermenu() {
         echo ""
     fi
 
-    echo "Filesystem Information:"
-    echo "------------------------------------"
-
-    df -h
-    echo ""
-
     echo "Memory Information:"
     echo "------------------------------------"
 
@@ -87,7 +81,66 @@ sercvermenu() {
 EOF
             clear
             ;;
-        "back")
+        "back main menu")
+            fisrtmenu
+            ;;
+        *) echo "Invalid option $REPLY" ;;
+        esac
+    done
+
+}
+
+vpnserver() {
+
+    PS3="Please select vpn server for installing: "
+
+    options=("install 3x-ui" "install x-ui" "install openconnect server" "Quit")
+
+    select opt in "${options[@]}"; do
+        case $opt in
+        "install 3x-ui")
+            echo "https://github.com/MHSanaei/3x-ui"
+            sleep 5
+            bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh)
+            ;;
+        "install x-ui")
+            echo "https://github.com/FranzKafkaYu/x-ui/"
+            sleep 5
+            bash <(curl -Ls https://raw.githubusercontent.com/FranzKafkaYu/x-ui/master/install_en.sh)
+            ;;
+        "install openconnect server (docker base)")
+            echo "https://github.com/samsesh/ocserv-docker"
+            sleep 5
+            dockercheck
+            docker build -t ocserv https://github.com/samsesh/ocserv-docker.git
+            regex='^[0-9]+$'
+
+            echo "Enter a port number (Press Enter for default value '443'): "
+            read port
+
+            if ! [[ $port =~ $regex ]]; then
+                echo "Error: Port number must be a number" >&2
+                exit 1
+            elif [ -z "$port" ]; then
+                port="443"
+            fi
+            docker run --name ocserv --privileged -p $port:443 -p $port:443/udp -d --restart unless-stopped ocserv
+            echo "you use this command for add user"
+            echo "docker exec -ti ocserv ocpasswd -c /etc/ocserv/ocpasswd testUserName"
+            echo "more info https://github.com/samsesh/ocserv-docker#docker-installation"
+            echo "Press any key to exit..."
+            read -n 1 -s
+            ;;
+        "install openvpn server (pritunl)")
+        echo  "https://github.com/samsesh/pritunl-install"
+            bash <(curl -sSL https://github.com/samsesh/pritunl-install/raw/Localhost/pritunlinstall.sh)
+
+            ;;
+        "install openconnect server")
+            echo "You chose Option 3"
+
+            ;;
+        "back to main menu")
             fisrtmenu
             ;;
         *) echo "Invalid option $REPLY" ;;
@@ -108,11 +161,11 @@ fisrtmenu() {
             ;;
         "install vpn server")
             echo "VPN Servers "
-            # Add your code here for Option 2
+            vpnserver
             ;;
         "uninstall vpn server")
             echo "soon"
-            # Add your code here for Option 3
+
             ;;
         "Quit")
             exit
