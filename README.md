@@ -5,6 +5,14 @@ Apart from that, it has the ability to improve the server and show the capabilit
 ```bash
 bash <(curl -sSL https://github.com/samsesh/lazy-vpn/raw/Localhost/lazy.sh)
 ```
+- run with tmux
+```bash
+tmux new -s lazy "bash <(curl -sSL https://github.com/samsesh/lazy-vpn/raw/Localhost/lazy.sh)"
+```
+> It is better to use tmux so that if the ssh connection with the server is interrupted, the command will not be broken, If the connection is interrupted, you can return to the installation page with the following command after connecting to the server
+```bash
+tmux a -d -t lazy
+```
 ## link 
 - [Ubuntu-Optimizer](https://github.com/samsesh/Ubuntu-Optimizer)
 - [hiddify](https://github.com/hiddify/hiddify-config/)
