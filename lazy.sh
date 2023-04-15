@@ -94,7 +94,7 @@ vpnserver() {
     clear
     PS3="Please select vpn server for installing: "
 
-    options=("install hiddify" "install 3x-ui" "install x-ui" "install xray-reality" "install openconnect server" "install openvpn server (pritunl)" "install softether server" "install socks and http proxy server(docker base)" "Quit")
+    options=("install hiddify" "install 3x-ui" "install x-ui" "install xray-reality" "install openconnect server" "install openvpn server (pritunl)" "install softether server" "install socks and http proxy server(docker base)" "back to main menu")
 
     select opt in "${options[@]}"; do
         case $opt in
@@ -213,7 +213,7 @@ vpnserver() {
 fisrtmenu() {
     clear
     PS3="Please select an option: "
-    options=("server options" "install vpn server" "uninstall vpn server" "Quit")
+    options=("server options" "install vpn server" "Quit")
 
     select opt in "${options[@]}"; do
         case $opt in
@@ -225,12 +225,9 @@ fisrtmenu() {
             echo "VPN Servers "
             vpnserver
             ;;
-        "uninstall vpn server")
-            echo "soon"
-
-            ;;
         "Quit")
-            exit
+            clear
+            exit 1
             ;;
         *) echo "Invalid option $REPLY" ;;
         esac
