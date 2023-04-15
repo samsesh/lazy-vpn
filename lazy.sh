@@ -94,10 +94,17 @@ vpnserver() {
     clear
     PS3="Please select vpn server for installing: "
 
-    options=("install 3x-ui" "install x-ui" "install openconnect server" "install openvpn server (pritunl)" "install softether server" "install socks and http proxy server(docker base)" "Quit")
+    options=("install hiddify" "install 3x-ui" "install x-ui" "install openconnect server" "install openvpn server (pritunl)" "install softether server" "install socks and http proxy server(docker base)" "Quit")
 
     select opt in "${options[@]}"; do
         case $opt in
+
+        "install hiddify")
+            echo "https://github.com/hiddify/hiddify-config/"
+            sleep 5
+            bash -c "$(curl -Lfo- https://raw.githubusercontent.com/hiddify/hiddify-config/main/common/download_install.sh)"
+            ;;
+
         "install 3x-ui")
             echo "https://github.com/MHSanaei/3x-ui"
             sleep 5
@@ -185,14 +192,11 @@ vpnserver() {
 
         "install softether server")
             echo "https://github.com/samsesh/softether-install"
-            sleep 5 
-            git clone https://github.com/samsesh/softether-install.git && cd softether-install &&  bash install.sh
+            sleep 5
+            git clone https://github.com/samsesh/softether-install.git && cd softether-install && bash install.sh
             ;;
 
-        "back to main menu")
-            fisrtmenu
-            ;;
-
+        
         "back to main menu")
             fisrtmenu
             ;;
