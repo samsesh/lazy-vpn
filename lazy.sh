@@ -94,7 +94,7 @@ vpnserver() {
     clear
     PS3="Please select vpn server for installing: "
 
-    options=("install hiddify" "install 3x-ui" "install x-ui" "install openconnect server" "install openvpn server (pritunl)" "install softether server" "install socks and http proxy server(docker base)" "Quit")
+    options=("install hiddify" "install 3x-ui" "install x-ui" "install xray-reality" "install openconnect server" "install openvpn server (pritunl)" "install softether server" "install socks and http proxy server(docker base)" "Quit")
 
     select opt in "${options[@]}"; do
         case $opt in
@@ -114,6 +114,11 @@ vpnserver() {
             echo "https://github.com/FranzKafkaYu/x-ui/"
             sleep 5
             bash <(curl -Ls https://raw.githubusercontent.com/FranzKafkaYu/x-ui/master/install_en.sh)
+            ;;
+        "install xray-reality")
+            echo "https://github.com/sajjaddg/xray-reality"
+            sleep 5
+            bash -c "$(curl -L https://raw.githubusercontent.com/sajjaddg/xray-reality/master/install.sh)"
             ;;
         "install openconnect server (docker base)")
             echo "https://github.com/samsesh/ocserv-docker"
@@ -196,10 +201,6 @@ vpnserver() {
             git clone https://github.com/samsesh/softether-install.git && cd softether-install && bash install.sh
             ;;
 
-        
-        "back to main menu")
-            fisrtmenu
-            ;;
         "back to main menu")
             fisrtmenu
             ;;
