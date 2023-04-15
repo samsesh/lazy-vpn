@@ -94,7 +94,7 @@ vpnserver() {
 
     PS3="Please select vpn server for installing: "
 
-    options=("install 3x-ui" "install x-ui" "install openconnect server" "Quit")
+    options=("install 3x-ui" "install x-ui" "install openconnect server" "install openvpn server (pritunl)" "Quit")
 
     select opt in "${options[@]}"; do
         case $opt in
@@ -132,12 +132,54 @@ vpnserver() {
             read -n 1 -s
             ;;
         "install openvpn server (pritunl)")
-        echo  "https://github.com/samsesh/pritunl-install"
+            echo "https://github.com/samsesh/pritunl-install"
             bash <(curl -sSL https://github.com/samsesh/pritunl-install/raw/Localhost/pritunlinstall.sh)
 
             ;;
-        "install openconnect server")
-            echo "You chose Option 3"
+        "install socks and http proxy server(docker base)")
+            echo "https://github.com/samsesh/3proxy-docker-compose"
+            sleep 5
+            regex='^[0-9]+$'
+
+            echo "Enter a port number for socks (Press Enter for default value '3128'): "
+            read ports
+
+            if ! [[ $port =~ $regex ]]; then
+                echo "Error: Port number must be a number" >&2
+                exit 1
+            elif [ -z "$ports" ]; then
+                ports="3128"
+            fi
+            regex='^[0-9]+$'
+
+            echo "Enter a port number for http (Press Enter for default value '1080'): "
+            read porth
+
+            if ! [[ $port =~ $regex ]]; then
+                echo "Error: Port number must be a number" >&2
+                exit 1
+            elif [ -z "$porth" ]; then
+                port="443"
+            fi
+            echo "Enter user for proxy (Press Enter for default value 'evli'): "
+            read username
+
+            if [ -z "$username" ]; then
+            username="evli"
+            fi
+            echo "Enter user for proxy (Press Enter for default value 'live'): "
+            read password
+
+            if [ -z "$password" ]; then
+            password="live"
+            fi
+            $ docker run --rm -d \
+                -p $ports:3128/tcp \
+                -p $porth:1080/tcp \
+                -e PROXY_LOGIN=$username \
+                -e PROXY_PASSWORD=$password \
+                -e PRIMARY_RESOLVER=2001:4860:4860::8888 \
+                tarampampam/3proxy:latest
 
             ;;
         "back to main menu")
