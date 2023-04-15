@@ -91,10 +91,10 @@ EOF
 }
 
 vpnserver() {
-
+    clear
     PS3="Please select vpn server for installing: "
 
-    options=("install 3x-ui" "install x-ui" "install openconnect server" "install openvpn server (pritunl)" "install socks and http proxy server(docker base)" "Quit")
+    options=("install 3x-ui" "install x-ui" "install openconnect server" "install openvpn server (pritunl)" "install softether server" "install socks and http proxy server(docker base)" "Quit")
 
     select opt in "${options[@]}"; do
         case $opt in
@@ -165,13 +165,13 @@ vpnserver() {
             read username
 
             if [ -z "$username" ]; then
-            username="evli"
+                username="evli"
             fi
             echo "Enter user for proxy (Press Enter for default value 'live'): "
             read password
 
             if [ -z "$password" ]; then
-            password="live"
+                password="live"
             fi
             $ docker run --rm -d \
                 -p $ports:3128/tcp \
@@ -181,6 +181,20 @@ vpnserver() {
                 -e PRIMARY_RESOLVER=2001:4860:4860::8888 \
                 tarampampam/3proxy:latest
 
+            ;;
+
+        "install softether server")
+            echo "https://github.com/samsesh/softether-install"
+            sleep 5 
+            git clone https://github.com/samsesh/softether-install.git && cd softether-install &&  bash install.sh
+            ;;
+
+        "back to main menu")
+            fisrtmenu
+            ;;
+
+        "back to main menu")
+            fisrtmenu
             ;;
         "back to main menu")
             fisrtmenu
@@ -192,6 +206,7 @@ vpnserver() {
 }
 
 fisrtmenu() {
+    clear
     PS3="Please select an option: "
     options=("server options" "install vpn server" "uninstall vpn server" "Quit")
 
