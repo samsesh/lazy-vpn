@@ -1,6 +1,4 @@
 #!/bin/bash
-echo "$(tput setaf 2)welcome to lazy vpn script$(tput sgr0)"
-
 dockercheck() {
     #install docker
 
@@ -33,8 +31,6 @@ dockercheck() {
 
 sercvermenu() {
     clear
-    #!/bin/bash
-
     echo "System Information:"
     echo "------------------------------------"
 
@@ -221,6 +217,7 @@ vpnserver() {
 
 fisrtmenu() {
     clear
+    echo "$(tput setaf 2)welcome to lazy vpn script$(tput sgr0)"
     PS3="Please select an option: "
     options=("server options" "install vpn server" "Quit")
 
