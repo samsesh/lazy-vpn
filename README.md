@@ -19,7 +19,8 @@ tmux a -d -t lazy
 ## link 
 - [hiddify](https://github.com/hiddify/hiddify-config/)
 - [3x-ui](https://github.com/MHSanaei/3x-ui)
-- [x-ui](https://github.com/FranzKafkaYu/x-ui)
+- [x-ui (chinese)](https://github.com/vaxilu/x-ui/)
+- [x-ui (en)](https://github.com/FranzKafkaYu/x-ui)
 - [xray-reality](https://github.com/sajjaddg/xray-reality)
 - [Hi Hysteria](https://github.com/emptysuns/Hi_Hysteria)
 - [NaiveProxy](https://github.com/yonggekkk/NaiveProxy-yg)
