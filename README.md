@@ -22,6 +22,7 @@ tmux a -d -t lazy
 - [x-ui](https://github.com/FranzKafkaYu/x-ui)
 - [xray-reality](https://github.com/sajjaddg/xray-reality)
 - [Hi Hysteria](https://github.com/emptysuns/Hi_Hysteria)
+- [NaiveProxy](https://github.com/yonggekkk/NaiveProxy-yg)
 - [openconnect server](https://github.com/samsesh/ocserv-docker)
 - [openvpn server [pritunl]](https://github.com/samsesh/pritunl-install)
 - [softether server](https://github.com/samsesh/softether-install)
