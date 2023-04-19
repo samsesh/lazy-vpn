@@ -121,9 +121,9 @@ vpnserver() {
             bash <(curl -Ls https://raw.githubusercontent.com/FranzKafkaYu/x-ui/master/install_en.sh)
             ;;
         "install x-ui (chinese)")
-            echo "https://github.com/FranzKafkaYu/x-ui/"
+            echo "https://github.com/vaxilu/x-ui/"
             sleep 5
-            bash <(curl -Ls https://raw.githubusercontent.com/FranzKafkaYu/x-ui/master/install.sh)
+            bash <(curl -Ls https://raw.githubusercontent.com/vaxilu/x-ui/master/install.sh)
             ;;
         "install Hi_Hysteria")
             echo "https://github.com/emptysuns/Hi_Hysteria"
