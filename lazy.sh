@@ -99,7 +99,7 @@ vpnserver() {
     check_if_running_as_root
     PS3="Please select vpn server for installing: "
 
-    options=("install hiddify" "install 3x-ui" "install x-ui" "install Hi_Hysteria" "install NaiveProxy" "install xray-reality" "install openconnect server (docker base)" "install openvpn server (pritunl)" "install softether server" "install socks and http proxy server(docker base)" "back to main menu")
+    options=("install hiddify" "install 3x-ui" "install x-ui (en)" "install x-ui (chinese)" "install Hi_Hysteria" "install NaiveProxy" "install xray-reality" "install openconnect server (docker base)" "install openvpn server (pritunl)" "install softether server" "install socks and http proxy server(docker base)" "back to main menu")
 
     select opt in "${options[@]}"; do
         case $opt in
@@ -115,10 +115,15 @@ vpnserver() {
             sleep 5
             bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh)
             ;;
-        "install x-ui")
+        "install x-ui (en)")
             echo "https://github.com/FranzKafkaYu/x-ui/"
             sleep 5
             bash <(curl -Ls https://raw.githubusercontent.com/FranzKafkaYu/x-ui/master/install_en.sh)
+            ;;
+        "install x-ui (chinese)")
+            echo "https://github.com/FranzKafkaYu/x-ui/"
+            sleep 5
+            bash <(curl -Ls https://raw.githubusercontent.com/FranzKafkaYu/x-ui/master/install.sh)
             ;;
         "install Hi_Hysteria")
             echo "https://github.com/emptysuns/Hi_Hysteria"
