@@ -18,19 +18,41 @@ dockercheck() {
         sleep 5
         clear
         echo $(tput setaf 2)Docker has been installed successfully!$(tput sgr0)
-
-        
     else
         echo $(tput setaf 2)Docker is already installed on this system.$(tput sgr0)
-        
     fi
 
     sleep 5
     clear
 }
 
-sercvermenu() {
-    clear
+ipcheck() {
+    # Get the local IP address
+    local_ip=$(hostname -I | awk '{print $1}')
+
+    # Get the public IP addresses
+    public_ipv4=$(curl -s https://api.ipify.org)
+    public_ipv6=$(curl -6s https://api6.ipify.org)
+
+    # Get the IPv6 address
+    ipv6=$(ip -6 addr show dev eth0 | awk '/inet6/ {print $2}')
+
+    # Check if the IPv6 address is assigned
+    if [ -z "$ipv6" ]; then
+        ipv6="$(tput setaf 2)Not assigned$(tput sgr0)" # Set the text to red if not assigned
+    fi
+
+    # Display the IP addresses
+    echo "IP Information:"
+    echo "------------------------------------"
+    echo "Local IP Address: $local_ip"
+    echo "Public IPv4 Address: $public_ipv4"
+    echo "Public IPv6 Address: $public_ipv6"
+    echo "IPv6 Address: $ipv6"
+
+}
+
+sysinfo() {
     echo "System Information:"
     echo "------------------------------------"
 
@@ -53,6 +75,12 @@ sercvermenu() {
 
     free -m
     echo ""
+}
+
+sercvermenu() {
+    clear
+    sysinfo
+    ipcheck
 
     PS3="Please select an option: "
 
@@ -162,6 +190,7 @@ vpnserver() {
             echo "more info https://github.com/samsesh/ocserv-docker#docker-installation"
             echo "Press any key to exit..."
             read -n 1 -s
+            vpnserver
             ;;
         "install openvpn server (pritunl)")
             echo "https://github.com/samsesh/pritunl-install"
@@ -205,7 +234,7 @@ vpnserver() {
             if [ -z "$password" ]; then
                 password="live"
             fi
-            $ docker run --rm -d \
+            docker run --rm -d \
                 -p $ports:3128/tcp \
                 -p $porth:1080/tcp \
                 -e PROXY_LOGIN=$username \
