@@ -49,7 +49,7 @@ ipcheck() {
     echo "Public IPv4 Address: $public_ipv4"
     echo "Public IPv6 Address: $public_ipv6"
     echo "IPv6 Address: $ipv6"
-
+    echo ""
 }
 
 sysinfo() {
