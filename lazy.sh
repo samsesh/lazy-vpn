@@ -19,10 +19,10 @@ dockercheck() {
         clear
         echo $(tput setaf 2)Docker has been installed successfully!$(tput sgr0)
 
-        sercvermenu
+        
     else
         echo $(tput setaf 2)Docker is already installed on this system.$(tput sgr0)
-        sercvermenu
+        
     fi
 
     sleep 5
@@ -56,7 +56,7 @@ sercvermenu() {
 
     PS3="Please select an option: "
 
-    options=("run Ubuntu-Optimizer" "install docker" "install cfwarp" "back")
+    options=("run Ubuntu-Optimizer" "install docker" "install cfwarp" "back main menu")
 
     select opt in "${options[@]}"; do
         case $opt in
