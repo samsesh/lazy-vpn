@@ -127,7 +127,7 @@ vpnserver() {
     check_if_running_as_root
     PS3="Please select vpn server for installing: "
 
-    options=("install hiddify" "install 3x-ui" "install x-ui (en)" "install x-ui (chinese)" "install Hi_Hysteria (chinese)" "install NaiveProxy (chinese)" "install xray-reality" "install openconnect server (docker base)" "install openvpn server (pritunl)" "install softether server" "install socks and http proxy server(docker base)" "back to main menu")
+    options=("install hiddify" "install 3x-ui" "install x-ui (en)" "install x-ui (chinese)" "install Hi_Hysteria (chinese)" "install NaiveProxy (chinese)" "install xray-reality" "install wireguard (docker base)" "install openconnect server (docker base)" "install openvpn server (pritunl)" "install softether server" "install socks and http proxy server(docker base)" "back to main menu")
 
     select opt in "${options[@]}"; do
         case $opt in
@@ -167,6 +167,47 @@ vpnserver() {
             echo "https://github.com/sajjaddg/xray-reality"
             sleep 5
             bash -c "$(curl -L https://raw.githubusercontent.com/sajjaddg/xray-reality/master/install.sh)"
+            ;;
+        "install wireguard (docker base)")
+            echo "https://github.com/samsesh/wireguard-docker"
+            sleep 5
+            dockercheck
+            mkdir -p /tmp/lazy/
+            git clone https://github.com/samsesh/wireguard-docker.git /tmp/lazy/wg
+
+            echo "Please enter the new value for FILELOCATION (press Enter to use default value of /docker/wireguard):"
+            read file_location
+
+            if [ -z "$file_location" ]; then
+                file_location="/docker/wireguard"
+            fi
+
+            echo "Please enter the new value for USERPEERS (press Enter to use default value of 10):"
+            read user_peers
+
+            if [ -z "$user_peers" ]; then
+                user_peers="10"
+            fi
+
+            echo "Please enter the new value for CONTAINERNAME (press Enter to use default value of wireguard):"
+            read container_name
+
+            if [ -z "$container_name" ]; then
+                container_name="wireguard"
+            fi
+
+            sed -i "s/^FILELOCATION=.*/FILELOCATION=$file_location/g" /tmp/lazy/wg/.env
+            sed -i "s/^USERPEERS=.*/USERPEERS=$user_peers/g" /tmp/lazy/wg/.env
+            sed -i "s/^CONTAINERNAME=.*/CONTAINERNAME=$container_name/g" /tmp/lazy/wg/.env
+
+            pw=$(pwd)
+            cd /tmp/lazy/wg
+            bash install-on-ubuntu.sh
+            cd $pw
+            clear
+            ehco "for show connection qr code use this command"
+            echo "docker exec -it $container_name /app/show-peer 1"
+            echo "more info on https://github.com/samsesh/wireguard-docker"
             ;;
         "install openconnect server (docker base)")
             echo "https://github.com/samsesh/ocserv-docker"
