@@ -253,9 +253,11 @@ vpnserver() {
             mkdir /docker
             git clone https://github.com/samsesh/openvpn-dockercompose.git $file_location_open
             sed -i "s/^container_name:.*/container_name:$container_name_open/g" $file_location_open/docker-compose.yml
+            pw=$(pwd)
             cd $file_location_open
             docker-compose run --rm $container_name_open ovpn_initpki
             docker-compose up -d $container_name_open
+            cd $pw
             echo "you use this command for add user"
             echo "docker-compose run --rm $container_name_open easyrsa build-client-full testUserName nopass"
             echo "more info https://github.com/samsesh/openvpn-dockercompose"
