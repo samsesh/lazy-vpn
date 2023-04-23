@@ -235,20 +235,33 @@ vpnserver() {
             ;;
         "install openvpn server (docker base)")
             echo "https://github.com/samsesh/openvpn-dockercompose"
-
+            sleep 5 
+            clear
             echo "Please enter the new value for FILELOCATION (press Enter to use default value of /docker/wireguard):"
             read file_location_open
 
             if [ -z "$file_location_open" ]; then
                 file_location_open="/docker/openvpn-dockercompose"
             fi
-            mkdir /docker
-            git clone https://github.com/samsesh/openvpn-dockercompose $file_location_open
-            cd $file_location_open
-            docker-compose run --rm openvpn ovpn_initpki
-            sudo chown -R $(whoami): ./openvpn-data
-            docker-compose up -d openvpn
+            echo "Please enter the new value for CONTAINERNAME (press Enter to use default value of openvpn):"
+            read container_name_open
 
+            if [ -z "$container_name_open" ]; then
+                container_name_open="openvpn"
+            fi
+
+            mkdir /docker
+            git clone https://github.com/samsesh/openvpn-dockercompose.git $file_location_open
+            sed -i "s/^container_name:.*/container_name:$container_name_open/g" $file_location_open/docker-compose.yml
+            cd $file_location_open
+            docker-compose run --rm $container_name_open ovpn_initpki
+            docker-compose up -d $container_name_open
+            echo "you use this command for add user"
+            echo "docker-compose run --rm $container_name_open easyrsa build-client-full testUserName nopass"
+            echo "more info https://github.com/samsesh/openvpn-dockercompose"
+            echo "Press any key to exit..."
+            read -n 1 -s
+            vpnserver
             ;;
         "install openvpn server (pritunl)")
             echo "https://github.com/samsesh/pritunl-install"
