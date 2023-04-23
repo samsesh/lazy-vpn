@@ -9,9 +9,6 @@ dockercheck() {
         # Install Docker using the official Docker installation script
         curl -sSL https://get.docker.com | sh
 
-        # Add the current user to the docker group so you can run Docker commands without sudo
-        usermod -aG docker $USER
-
         # Start the Docker service
         service docker start
 
