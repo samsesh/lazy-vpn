@@ -27,6 +27,7 @@ tmux a -d -t lazy
 - [wireguard (docker base)](https://github.com/samsesh/wireguard-docker)
 - [openconnect server (docker base)](https://github.com/samsesh/ocserv-docker)
 - [openvpn server (pritunl)](https://github.com/samsesh/pritunl-install)
+- [openvpn server (docker base)](https://github.com/samsesh/openvpn-dockercompose)
 - [softether server](https://github.com/samsesh/softether-install)
 - [proxy server (docker base)](https://github.com/samsesh/3proxy-docker-compose)
 - [Ubuntu-Optimizer](https://github.com/samsesh/Ubuntu-Optimizer)

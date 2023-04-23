@@ -127,7 +127,7 @@ vpnserver() {
     check_if_running_as_root
     PS3="Please select vpn server for installing: "
 
-    options=("install hiddify" "install 3x-ui" "install x-ui (en)" "install x-ui (chinese)" "install Hi_Hysteria (chinese)" "install NaiveProxy (chinese)" "install xray-reality" "install wireguard (docker base)" "install openconnect server (docker base)" "install openvpn server (pritunl)" "install softether server" "install socks and http proxy server(docker base)" "back to main menu")
+    options=("install hiddify" "install 3x-ui" "install x-ui (en)" "install x-ui (chinese)" "install Hi_Hysteria (chinese)" "install NaiveProxy (chinese)" "install xray-reality" "install wireguard (docker base)" "install openconnect server (docker base)" "install openvpn server (docker base)" "install openvpn server (pritunl)" "install softether server" "install socks and http proxy server(docker base)" "back to main menu")
 
     select opt in "${options[@]}"; do
         case $opt in
@@ -232,6 +232,23 @@ vpnserver() {
             echo "Press any key to exit..."
             read -n 1 -s
             vpnserver
+            ;;
+        "install openvpn server (docker base)")
+            echo "https://github.com/samsesh/openvpn-dockercompose"
+
+            echo "Please enter the new value for FILELOCATION (press Enter to use default value of /docker/wireguard):"
+            read file_location_open
+
+            if [ -z "$file_location_open" ]; then
+                file_location_open="/docker/openvpn-dockercompose"
+            fi
+            mkdir /docker
+            git clone https://github.com/samsesh/openvpn-dockercompose $file_location_open
+            cd $file_location_open
+            docker-compose run --rm openvpn ovpn_initpki
+            sudo chown -R $(whoami): ./openvpn-data
+            docker-compose up -d openvpn
+
             ;;
         "install openvpn server (pritunl)")
             echo "https://github.com/samsesh/pritunl-install"
