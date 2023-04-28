@@ -264,7 +264,7 @@ vpnserver() {
             ;;
         "install openvpn server (pritunl)")
             echo "https://github.com/samsesh/pritunl-install"
-            bash <(curl -sSL https://github.com/samsesh/pritunl-install/raw/Localhost/pritunlinstall.sh)
+            bash <(curl -sSL https://github.com/samsesh/pritunl-install/raw/Localhost/installfromgithub.sh)
 
             ;;
         "install socks and http proxy server(docker base)")
