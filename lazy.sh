@@ -246,6 +246,16 @@ vpnserver() {
             read -n 1 -s
             vpnserver
             ;;
+        "install openconnect server")
+            echo "https://github.com/samsesh/ocserv-docker"
+            sleep 5
+            mkdir -p /tmp/lazy/
+            cd /tmp/lazy/
+            wget -N --no-check-certificate https://raw.githubusercontent.com/sfc9982/AnyConnect-Server/main/ocserv-en.sh
+            chmod +x ocserv-en.sh
+            bash ocserv-en.sh
+            vpnserver
+            ;;
         "install openvpn server (docker base)")
             echo "https://github.com/samsesh/openvpn-dockercompose"
             sleep 5
