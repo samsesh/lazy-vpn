@@ -124,7 +124,7 @@ vpnserver() {
     check_if_running_as_root
     PS3="Please select vpn server for installing: "
 
-    options=("install hiddify" "install 3x-ui" "install x-ui (en)" "install x-ui (chinese)" "install Hi_Hysteria (chinese)" "install NaiveProxy (chinese)" "install xray-reality" "marzban (docker base)" "install wireguard" "install wireguard (docker base)" "install openconnect server (docker base)" "install openvpn server (docker base)" "install openvpn server (pritunl)" "install softether server" "install socks and http proxy server(docker base)" "back to main menu")
+    options=("install hiddify" "install 3x-ui" "install x-ui (en)" "install x-ui (chinese)" "install Hi_Hysteria (chinese)" "install NaiveProxy (chinese)" "install xray-reality" "marzban (docker base)" "install wireguard" "install wireguard (docker base)" "install openconnect server (docker base)" "install openvpn server (docker base)" "install openvpn server (pritunl)" "install openvpn server" "install softether server" "install socks and http proxy server(docker base)" "back to main menu")
 
     select opt in "${options[@]}"; do
         case $opt in
@@ -314,8 +314,13 @@ vpnserver() {
             ;;
         "install openvpn server (pritunl)")
             echo "https://github.com/samsesh/pritunl-install"
+            sleep 5
             bash <(curl -sSL https://github.com/samsesh/pritunl-install/raw/Localhost/installfromgithub.sh)
-
+            ;;
+        "install openvpn server")
+            echo "https://github.com/angristan/openvpn-install"
+            sleep 5
+            bash <(curl -sSL https://raw.githubusercontent.com/angristan/openvpn-install/master/openvpn-install.sh)
             ;;
         "install socks and http proxy server(docker base)")
             echo "https://github.com/samsesh/3proxy-docker-compose"
