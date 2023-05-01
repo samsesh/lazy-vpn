@@ -34,5 +34,6 @@ tmux a -d -t lazy
 - [openvpn server](https://github.com/angristan/openvpn-install)
 - [softether server](https://github.com/samsesh/softether-install)
 - [proxy server (🐳 docker base)](https://github.com/samsesh/3proxy-docker-compose)
+---
 - [Ubuntu-Optimizer 🐧](https://github.com/samsesh/Ubuntu-Optimizer)
 - [cfwarp repository link](https://gitlab.com/rwkgyg/CFwarp/)
