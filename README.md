@@ -18,9 +18,9 @@ tmux a -d -t lazy
 - [ ] Checking the existence of a VPN server that does not interfere with the installation of other services
 ## link 
 - [hiddify](https://github.com/hiddify/hiddify-config/)
-- [3x-ui](https://github.com/MHSanaei/3x-ui)
+- [3x-ui (Sanaei)](https://github.com/MHSanaei/3x-ui)
 - [x-ui (chinese)](https://github.com/vaxilu/x-ui/)
-- [x-ui (en)](https://github.com/FranzKafkaYu/x-ui)
+- [x-ui (Kafka)(en)](https://github.com/FranzKafkaYu/x-ui)
 - [xray-reality](https://github.com/sajjaddg/xray-reality)
 - [marzban (🐳 docker base)](https://github.com/Gozargah/Marzban)
 - [Hi Hysteria](https://github.com/emptysuns/Hi_Hysteria)
