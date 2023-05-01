@@ -18,6 +18,7 @@ tmux a -d -t lazy
 - [ ] Checking the existence of a VPN server that does not interfere with the installation of other services
 ## link 
 - [hiddify](https://github.com/hiddify/hiddify-config/)
+- [ShadowSocks ssr](https://github.com/ShadowsocksR-Live/shadowsocksr-native)
 - [3x-ui (Sanaei)](https://github.com/MHSanaei/3x-ui)
 - [x-ui (chinese)](https://github.com/vaxilu/x-ui/)
 - [x-ui (Kafka)(en)](https://github.com/FranzKafkaYu/x-ui)

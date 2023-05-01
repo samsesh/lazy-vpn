@@ -124,7 +124,7 @@ vpnserver() {
     check_if_running_as_root
     PS3="Please select vpn server for installing: "
 
-    options=("install hiddify" "install 3x-ui (Sanaei)" "install x-ui (Kafka)(en)" "install x-ui (chinese)" "install Hi_Hysteria (chinese)" "install NaiveProxy (chinese)" "install xray-reality" "marzban (docker base)" "install wireguard" "install wireguard (docker base)" "install openconnect server (docker base)" "install openvpn server (docker base)" "install openvpn server (pritunl)" "install openvpn server" "install softether server" "install socks and http proxy server(docker base)" "back to main menu")
+    options=("install hiddify" "ShadowSocks ssr" "install 3x-ui (Sanaei)" "install x-ui (Kafka)(en)" "install x-ui (chinese)" "install Hi_Hysteria (chinese)" "install NaiveProxy (chinese)" "install xray-reality" "marzban (docker base)" "install wireguard" "install wireguard (docker base)" "install openconnect server (docker base)" "install openvpn server (docker base)" "install openvpn server (pritunl)" "install openvpn server" "install softether server" "install socks and http proxy server(docker base)" "back to main menu")
 
     select opt in "${options[@]}"; do
         case $opt in
@@ -134,7 +134,13 @@ vpnserver() {
             sleep 5
             bash -c "$(curl -Lfo- https://raw.githubusercontent.com/hiddify/hiddify-config/main/common/download_install.sh)"
             ;;
-
+        "ShadowSocks ssr")
+            echo "https://github.com/ShadowsocksR-Live/shadowsocksr-native"
+            sleep 5
+            echo "net.core.default_qdisc=fq" >> /etc/sysctl.conf
+            echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.conf
+            bash <(curl -Ls https://raw.githubusercontent.com/ShadowsocksR-Live/shadowsocksr-native/master/install/ssrn-install.sh)
+            ;;
         "install 3x-ui (Sanaei)")
             echo "https://github.com/MHSanaei/3x-ui"
             sleep 5
