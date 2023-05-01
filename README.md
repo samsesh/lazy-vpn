@@ -22,6 +22,7 @@ tmux a -d -t lazy
 - [x-ui (chinese)](https://github.com/vaxilu/x-ui/)
 - [x-ui (en)](https://github.com/FranzKafkaYu/x-ui)
 - [xray-reality](https://github.com/sajjaddg/xray-reality)
+- [marzban (🐳 docker base)](https://github.com/Gozargah/Marzban)
 - [Hi Hysteria](https://github.com/emptysuns/Hi_Hysteria)
 - [NaiveProxy](https://github.com/yonggekkk/NaiveProxy-yg)
 - [wireguard (🐳 docker base)](https://github.com/samsesh/wireguard-docker)

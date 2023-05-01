@@ -124,7 +124,7 @@ vpnserver() {
     check_if_running_as_root
     PS3="Please select vpn server for installing: "
 
-    options=("install hiddify" "install 3x-ui" "install x-ui (en)" "install x-ui (chinese)" "install Hi_Hysteria (chinese)" "install NaiveProxy (chinese)" "install xray-reality" "install wireguard (docker base)" "install openconnect server (docker base)" "install openvpn server (docker base)" "install openvpn server (pritunl)" "install softether server" "install socks and http proxy server(docker base)" "back to main menu")
+    options=("install hiddify" "install 3x-ui" "install x-ui (en)" "install x-ui (chinese)" "install Hi_Hysteria (chinese)" "install NaiveProxy (chinese)" "install xray-reality" "marzban (docker base)" "install wireguard (docker base)" "install openconnect server (docker base)" "install openvpn server (docker base)" "install openvpn server (pritunl)" "install softether server" "install socks and http proxy server(docker base)" "back to main menu")
 
     select opt in "${options[@]}"; do
         case $opt in
@@ -164,6 +164,22 @@ vpnserver() {
             echo "https://github.com/sajjaddg/xray-reality"
             sleep 5
             bash -c "$(curl -L https://raw.githubusercontent.com/sajjaddg/xray-reality/master/install.sh)"
+            ;;
+        "marzban (docker base)")
+            echo "https://github.com/Gozargah/Marzban"
+            sleep 5
+            dockercheck
+            mkdir /docker
+            cd /docker
+            wget -qO- https://github.com/Gozargah/Marzban-examples/releases/latest/download/multi-port.tar.gz | tar xz --xform 's/multi-port/marzban/' && cd marzban
+            docker compose pull
+            docker compose up -d
+            clear
+            echo "done"
+            echo "marzban folder path :"
+            echo "/docker/marzban"
+            sleep 10
+            vpnserver
             ;;
         "install wireguard (docker base)")
             echo "https://github.com/samsesh/wireguard-docker"
@@ -232,7 +248,7 @@ vpnserver() {
             ;;
         "install openvpn server (docker base)")
             echo "https://github.com/samsesh/openvpn-dockercompose"
-            sleep 5 
+            sleep 5
             clear
             echo "Please enter the new value for FILELOCATION (press Enter to use default value of /docker/wireguard):"
             read file_location_open
