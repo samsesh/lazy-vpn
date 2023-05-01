@@ -173,6 +173,24 @@ vpnserver() {
             cd /docker
             wget -qO- https://github.com/Gozargah/Marzban-examples/releases/latest/download/multi-port.tar.gz | tar xz --xform 's/multi-port/marzban/' && cd marzban
             docker compose pull
+            apt install -y socat cron
+            read -p "Enter your domain name: " domain
+            read -p "Enter your email address: " email
+            read -p "Do you want to use TLS? (Y/n): " use_tls
+
+            if [[ $use_tls =~ ^[Yy]$ ]] || [[ -z $use_tls ]]; then
+                # Obtain SSL certificate
+                curl https://get.acme.sh | sh -s email=$email
+                mkdir -p /var/lib/marzban/certs/
+                ~/.acme.sh/acme.sh --issue --standalone -d $domain \
+                    --key-file /var/lib/marzban/certs/key.pem \
+                    --fullchain-file /var/lib/marzban/certs/fullchain.pem
+                # Change environment file
+                sed -i "s#VICORN_SSL_CERTFILE=.*#VICORN_SSL_CERTFILE=\"/var/lib/marzban/certs/fullchain.pem\"#" /docker/marzban/.env
+                sed -i "s#UVICORN_SSL_KEYFILE=.*#UVICORN_SSL_KEYFILE=\"/var/lib/marzban/certs/key.pem\"#" /docker/marzban/.env
+            else
+                echo "Skipping TLS certificate generation."
+            fi
             docker compose up -d
             clear
             echo "done"
