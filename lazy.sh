@@ -307,14 +307,14 @@ xui() {
     xuicheck
     PS3="Please select an option: "
 
-    options=("back to vpn server menu" "install 3x-ui (Sanaei)" "install x-ui (Kafka)(en)" "install x-ui (chinese)" "install x-ui (chinese)(docker base)"))
+    options=("back to vpn server menu" "install x-ui (alireza0)" "install 3x-ui (Sanaei)" "install x-ui (Kafka)(en)" "install x-ui (chinese)" "install x-ui (chinese)(docker base)"))
 
     select opt in "${options[@]}"; do
         case $opt in
         "back to vpn server menu")
             vpnserver
             ;;
-        "install x-ui (alireza)")
+        "install x-ui (alireza0)")
             echo "https://github.com/alireza0/x-ui"
             sleep 5
             bash <(curl -Ls https://raw.githubusercontent.com/alireza0/x-ui/master/install.sh)
