@@ -287,10 +287,10 @@ xrayi() {
 
 xuicheck() {
     if ! dpkg -s x-ui >/dev/null 2>&1; then
-
+        echo ""
         if ! docker ps --filter "name=xui" | grep xui >/dev/null 2>&1; then
             if ! docker ps --filter "name=x-ui" | grep xui >/dev/null 2>&1; then
-
+                echo ""
             else
                 echo "x-ui Docker container is running with name x-ui"
             fi
