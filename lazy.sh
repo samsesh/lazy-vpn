@@ -124,14 +124,14 @@ vpnserver() {
     check_if_running_as_root
     PS3="Please select vpn server for installing: "
 
-    options=("back" "xray (10)" "openvpn (3)" "openconnect (2)" "wireguard (2)" "install softether server" "install socks and http proxy server(docker base)")
+    options=("back" "xray (11)" "openvpn (3)" "openconnect (2)" "wireguard (2)" "install softether server" "install socks and http proxy server(docker base)")
 
     select opt in "${options[@]}"; do
         case $opt in
         "back")
             fisrtmenu
             ;;
-        "xray (10)")
+        "xray (11)")
             xrayi
             ;;
         "openvpn (3)")
@@ -207,14 +207,14 @@ xrayi() {
 
     PS3="Please select an option: "
 
-    options=("back to vpn server menu" "x-ui (4 script)" "install hiddify" "ShadowSocks ssr" "install Hi_Hysteria (chinese)" "install NaiveProxy (chinese)" "install xray-reality" "marzban (docker base)")
+    options=("back to vpn server menu" "x-ui (5 script)" "install hiddify" "ShadowSocks ssr" "install Hi_Hysteria (chinese)" "install NaiveProxy (chinese)" "install xray-reality" "marzban (docker base)")
 
     select opt in "${options[@]}"; do
         case $opt in
         "back to vpn server menu")
             vpnserver
             ;;
-        "x-ui (4 script)")
+        "x-ui (5 script)")
             xui
             ;;
         "install hiddify")
@@ -284,12 +284,30 @@ xrayi() {
     done
 
 }
+
+xuicheck() {
+    if ! dpkg -s x-ui >/dev/null 2>&1; then
+
+        if ! docker ps --filter "name=xui" | grep xui >/dev/null 2>&1; then
+            if ! docker ps --filter "name=x-ui" | grep xui >/dev/null 2>&1; then
+
+            else
+                echo "x-ui Docker container is running with name x-ui"
+            fi
+        else
+            echo "x-ui Docker container is running with name xui"
+        fi
+    else
+        echo "you have x-ui installed, it is better to change its default port and avoid reinstalling it on the server and use docker to have more x-ui services"
+    fi
+}
+
 xui() {
     clear
-
+    xuicheck
     PS3="Please select an option: "
 
-    options=("back to vpn server menu" "install 3x-ui (Sanaei)" "install x-ui (Kafka)(en)" "install x-ui (chinese)")
+    options=("back to vpn server menu" "install 3x-ui (Sanaei)" "install x-ui (Kafka)(en)" "install x-ui (chinese)" "install x-ui (chinese)(docker base)"))
 
     select opt in "${options[@]}"; do
         case $opt in
@@ -316,7 +334,19 @@ xui() {
             sleep 5
             bash <(curl -Ls https://raw.githubusercontent.com/vaxilu/x-ui/master/install.sh)
             ;;
-
+        "install x-ui (chinese)(docker base)")
+            echo "https://github.com/vaxilu/x-ui/"
+            sleep 5
+            dockercheck
+            mkdir /docker
+            cd /docker
+            mkdir x-ui && cd x-ui
+            docker run -itd --network=host \
+                -v $PWD/db/:/etc/x-ui/ \
+                -v $PWD/cert/:/root/cert/ \
+                --name x-ui --restart=unless-stopped \
+                enwaiax/x-ui:latest
+            ;;
         *) echo "Invalid option $REPLY" ;;
         esac
     done
@@ -499,6 +529,7 @@ openvpni() {
     done
 
 }
+
 fisrtmenu() {
     clear
     echo "$(tput setaf 2)welcome to lazy vpn script$(tput sgr0)"
