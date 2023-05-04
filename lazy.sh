@@ -124,209 +124,24 @@ vpnserver() {
     check_if_running_as_root
     PS3="Please select vpn server for installing: "
 
-    options=("install hiddify" "ShadowSocks ssr" "install 3x-ui (Sanaei)" "install x-ui (Kafka)(en)" "install x-ui (chinese)" "install Hi_Hysteria (chinese)" "install NaiveProxy (chinese)" "install xray-reality" "marzban (docker base)" "install wireguard" "install wireguard (docker base)" "install openconnect server (docker base)" "install openvpn server (docker base)" "install openvpn server (pritunl)" "install openvpn server" "install softether server" "install socks and http proxy server(docker base)" "back to main menu")
+    options=("back" "xray (10)" "openvpn (3)" "openconnect (2)" "wireguard (2)" "install softether server" "install socks and http proxy server(docker base)")
 
     select opt in "${options[@]}"; do
         case $opt in
-
-        "install hiddify")
-            echo "https://github.com/hiddify/hiddify-config/"
-            sleep 5
-            bash -c "$(curl -Lfo- https://raw.githubusercontent.com/hiddify/hiddify-config/main/common/download_install.sh)"
+        "back")
+            fisrtmenu
             ;;
-        "ShadowSocks ssr")
-            echo "https://github.com/ShadowsocksR-Live/shadowsocksr-native"
-            sleep 5
-            echo "net.core.default_qdisc=fq" >> /etc/sysctl.conf
-            echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.conf
-            bash <(curl -Ls https://raw.githubusercontent.com/ShadowsocksR-Live/shadowsocksr-native/master/install/ssrn-install.sh)
+        "xray (10)")
+            xrayi
             ;;
-        "install 3x-ui (Sanaei)")
-            echo "https://github.com/MHSanaei/3x-ui"
-            sleep 5
-            bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh)
+        "openvpn (3)")
+            openvpni
             ;;
-        "install x-ui (Kafka)(en)")
-            echo "https://github.com/FranzKafkaYu/x-ui/"
-            sleep 5
-            bash <(curl -Ls https://raw.githubusercontent.com/FranzKafkaYu/x-ui/master/install_en.sh)
+        "openconnect (2)")
+            openconnecti
             ;;
-        "install x-ui (chinese)")
-            echo "https://github.com/vaxilu/x-ui/"
-            sleep 5
-            bash <(curl -Ls https://raw.githubusercontent.com/vaxilu/x-ui/master/install.sh)
-            ;;
-        "install Hi_Hysteria (chinese)")
-            echo "https://github.com/emptysuns/Hi_Hysteria"
-            sleep 5
-            bash <(curl -fsSL https://git.io/hysteria.sh)
-            ;;
-        "install NaiveProxy")
-            echo "https://github.com/yonggekkk/NaiveProxy-yg"
-            sleep 5
-            bash <(curl -fsSL https://gitlab.com/rwkgyg/naiveproxy-yg/raw/main/naiveproxy.sh)
-            ;;
-        "install xray-reality")
-            echo "https://github.com/sajjaddg/xray-reality"
-            sleep 5
-            bash -c "$(curl -L https://raw.githubusercontent.com/sajjaddg/xray-reality/master/install.sh)"
-            ;;
-        "marzban (docker base)")
-            echo "https://github.com/Gozargah/Marzban"
-            sleep 5
-            dockercheck
-            mkdir /docker
-            cd /docker
-            wget -qO- https://github.com/Gozargah/Marzban-examples/releases/latest/download/multi-port.tar.gz | tar xz --xform 's/multi-port/marzban/' && cd marzban
-            docker compose pull
-            apt install -y socat cron
-            read -p "Enter your domain name: " domain
-            read -p "Enter your email address: " email
-            read -p "Do you want to use TLS? (Y/n): " use_tls
-
-            if [[ $use_tls =~ ^[Yy]$ ]] || [[ -z $use_tls ]]; then
-                # Obtain SSL certificate
-                curl https://get.acme.sh | sh -s email=$email
-                mkdir -p /var/lib/marzban/certs/
-                ~/.acme.sh/acme.sh --issue --standalone -d $domain \
-                    --key-file /var/lib/marzban/certs/key.pem \
-                    --fullchain-file /var/lib/marzban/certs/fullchain.pem
-                # Change environment file
-                sed -i "s#VICORN_SSL_CERTFILE=.*#VICORN_SSL_CERTFILE=\"/var/lib/marzban/certs/fullchain.pem\"#" /docker/marzban/.env
-                sed -i "s#UVICORN_SSL_KEYFILE=.*#UVICORN_SSL_KEYFILE=\"/var/lib/marzban/certs/key.pem\"#" /docker/marzban/.env
-            else
-                echo "Skipping TLS certificate generation."
-            fi
-            docker compose up -d
-            clear
-            echo "done"
-            echo "marzban folder path :"
-            echo "/docker/marzban"
-            sleep 10
-            vpnserver
-            ;;
-        "install wireguard (docker base)")
-            echo "https://github.com/samsesh/wireguard-docker"
-            sleep 5
-            dockercheck
-            mkdir -p /tmp/lazy/
-            git clone https://github.com/samsesh/wireguard-docker.git /tmp/lazy/wg
-
-            echo "Please enter the new value for FILELOCATION (press Enter to use default value of /docker/wireguard):"
-            read file_location
-
-            if [ -z "$file_location" ]; then
-                file_location="/docker/wireguard"
-            fi
-
-            echo "Please enter the new value for USERPEERS (press Enter to use default value of 10):"
-            read user_peers
-
-            if [ -z "$user_peers" ]; then
-                user_peers="10"
-            fi
-
-            echo "Please enter the new value for CONTAINERNAME (press Enter to use default value of wireguard):"
-            read container_name
-
-            if [ -z "$container_name" ]; then
-                container_name="wireguard"
-            fi
-
-            sed -i "s/^FILELOCATION=.*/FILELOCATION=$file_location/g" /tmp/lazy/wg/.env
-            sed -i "s/^USERPEERS=.*/USERPEERS=$user_peers/g" /tmp/lazy/wg/.env
-            sed -i "s/^CONTAINERNAME=.*/CONTAINERNAME=$container_name/g" /tmp/lazy/wg/.env
-
-            pw=$(pwd)
-            cd /tmp/lazy/wg
-            bash install-on-ubuntu.sh
-            cd $pw
-            clear
-            ehco "for show connection qr code use this command"
-            echo "docker exec -it $container_name /app/show-peer 1"
-            echo "more info on https://github.com/samsesh/wireguard-docker"
-            ;;
-        "install wireguard")
-            echo "https://github.com/angristan/wireguard-install"
-            sleep 5
-            bash <(curl -fsSL https://raw.githubusercontent.com/angristan/wireguard-install/master/wireguard-install.sh)
-            vpnserver
-            ;;
-        "install openconnect server (docker base)")
-            echo "https://github.com/samsesh/ocserv-docker"
-            sleep 5
-            dockercheck
-            docker build -t ocserv https://github.com/samsesh/ocserv-docker.git
-            regex='^[0-9]+$'
-
-            echo "Enter a port number (Press Enter for default value '443'): "
-            read port
-
-            if ! [[ $port =~ $regex ]]; then
-                echo "Error: Port number must be a number" >&2
-                exit 1
-            elif [ -z "$port" ]; then
-                port="443"
-            fi
-            docker run --name ocserv --privileged -p $port:443 -p $port:443/udp -d --restart unless-stopped ocserv
-            echo "you use this command for add user"
-            echo "docker exec -ti ocserv ocpasswd -c /etc/ocserv/ocpasswd testUserName"
-            echo "more info https://github.com/samsesh/ocserv-docker#docker-installation"
-            echo "Press any key to exit..."
-            read -n 1 -s
-            vpnserver
-            ;;
-        "install openconnect server")
-            echo "https://github.com/samsesh/ocserv-docker"
-            sleep 5
-            mkdir -p /tmp/lazy/
-            cd /tmp/lazy/
-            wget -N --no-check-certificate https://raw.githubusercontent.com/sfc9982/AnyConnect-Server/main/ocserv-en.sh
-            chmod +x ocserv-en.sh
-            bash ocserv-en.sh
-            vpnserver
-            ;;
-        "install openvpn server (docker base)")
-            echo "https://github.com/samsesh/openvpn-dockercompose"
-            sleep 5
-            clear
-            echo "Please enter the new value for FILELOCATION (press Enter to use default value of /docker/wireguard):"
-            read file_location_open
-
-            if [ -z "$file_location_open" ]; then
-                file_location_open="/docker/openvpn-dockercompose"
-            fi
-            echo "Please enter the new value for CONTAINERNAME (press Enter to use default value of openvpn):"
-            read container_name_open
-
-            if [ -z "$container_name_open" ]; then
-                container_name_open="openvpn"
-            fi
-
-            mkdir /docker
-            git clone https://github.com/samsesh/openvpn-dockercompose.git $file_location_open
-            sed -i "s/^container_name:.*/container_name:$container_name_open/g" $file_location_open/docker-compose.yml
-            pw=$(pwd)
-            cd $file_location_open
-            docker-compose run --rm $container_name_open ovpn_initpki
-            docker-compose up -d $container_name_open
-            cd $pw
-            echo "you use this command for add user"
-            echo "docker-compose run --rm $container_name_open easyrsa build-client-full testUserName nopass"
-            echo "more info https://github.com/samsesh/openvpn-dockercompose"
-            echo "Press any key to exit..."
-            read -n 1 -s
-            vpnserver
-            ;;
-        "install openvpn server (pritunl)")
-            echo "https://github.com/samsesh/pritunl-install"
-            sleep 5
-            bash <(curl -sSL https://github.com/samsesh/pritunl-install/raw/Localhost/installfromgithub.sh)
-            ;;
-        "install openvpn server")
-            echo "https://github.com/angristan/openvpn-install"
-            sleep 5
-            bash <(curl -sSL https://raw.githubusercontent.com/angristan/openvpn-install/master/openvpn-install.sh)
+        "wireguard (2)")
+            wireguardi
             ;;
         "install socks and http proxy server(docker base)")
             echo "https://github.com/samsesh/3proxy-docker-compose"
@@ -381,15 +196,309 @@ vpnserver() {
             git clone https://github.com/samsesh/softether-install.git && cd softether-install && bash install.sh
             ;;
 
-        "back to main menu")
-            fisrtmenu
-            ;;
         *) echo "Invalid option $REPLY" ;;
         esac
     done
 
 }
 
+xrayi() {
+    clear
+
+    PS3="Please select an option: "
+
+    options=("back to vpn server menu" "x-ui (4 script)" "install hiddify" "ShadowSocks ssr" "install Hi_Hysteria (chinese)" "install NaiveProxy (chinese)" "install xray-reality" "marzban (docker base)")
+
+    select opt in "${options[@]}"; do
+        case $opt in
+        "back to vpn server menu")
+            vpnserver
+            ;;
+        "x-ui (4 script)")
+            xui
+            ;;
+        "install hiddify")
+            echo "https://github.com/hiddify/hiddify-config/"
+            sleep 5
+            bash -c "$(curl -Lfo- https://raw.githubusercontent.com/hiddify/hiddify-config/main/common/download_install.sh)"
+            ;;
+        "ShadowSocks ssr")
+            echo "https://github.com/ShadowsocksR-Live/shadowsocksr-native"
+            sleep 5
+            echo "net.core.default_qdisc=fq" >>/etc/sysctl.conf
+            echo "net.ipv4.tcp_congestion_control=bbr" >>/etc/sysctl.conf
+            bash <(curl -Ls https://raw.githubusercontent.com/ShadowsocksR-Live/shadowsocksr-native/master/install/ssrn-install.sh)
+            ;;
+        "install Hi_Hysteria (chinese)")
+            echo "https://github.com/emptysuns/Hi_Hysteria"
+            sleep 5
+            bash <(curl -fsSL https://git.io/hysteria.sh)
+            ;;
+        "install NaiveProxy")
+            echo "https://github.com/yonggekkk/NaiveProxy-yg"
+            sleep 5
+            bash <(curl -fsSL https://gitlab.com/rwkgyg/naiveproxy-yg/raw/main/naiveproxy.sh)
+            ;;
+        "install xray-reality")
+            echo "https://github.com/sajjaddg/xray-reality"
+            sleep 5
+            bash -c "$(curl -L https://raw.githubusercontent.com/sajjaddg/xray-reality/master/install.sh)"
+            ;;
+        "marzban (docker base)")
+            echo "https://github.com/Gozargah/Marzban"
+            sleep 5
+            dockercheck
+            mkdir /docker
+            cd /docker
+            wget -qO- https://github.com/Gozargah/Marzban-examples/releases/latest/download/multi-port.tar.gz | tar xz --xform 's/multi-port/marzban/' && cd marzban
+            docker compose pull
+            apt install -y socat cron
+            read -p "Enter your domain name: " domain
+            read -p "Enter your email address: " email
+            read -p "Do you want to use TLS? (Y/n): " use_tls
+
+            if [[ $use_tls =~ ^[Yy]$ ]] || [[ -z $use_tls ]]; then
+                # Obtain SSL certificate
+                curl https://get.acme.sh | sh -s email=$email
+                mkdir -p /var/lib/marzban/certs/
+                ~/.acme.sh/acme.sh --issue --standalone -d $domain \
+                    --key-file /var/lib/marzban/certs/key.pem \
+                    --fullchain-file /var/lib/marzban/certs/fullchain.pem
+                # Change environment file
+                sed -i "s#VICORN_SSL_CERTFILE=.*#VICORN_SSL_CERTFILE=\"/var/lib/marzban/certs/fullchain.pem\"#" /docker/marzban/.env
+                sed -i "s#UVICORN_SSL_KEYFILE=.*#UVICORN_SSL_KEYFILE=\"/var/lib/marzban/certs/key.pem\"#" /docker/marzban/.env
+            else
+                echo "Skipping TLS certificate generation."
+            fi
+            docker compose up -d
+            clear
+            echo "done"
+            echo "marzban folder path :"
+            echo "/docker/marzban"
+            sleep 10
+            vpnserver
+            ;;
+
+        *) echo "Invalid option $REPLY" ;;
+        esac
+    done
+
+}
+xui() {
+    clear
+
+    PS3="Please select an option: "
+
+    options=("back to vpn server menu" "install 3x-ui (Sanaei)" "install x-ui (Kafka)(en)" "install x-ui (chinese)")
+
+    select opt in "${options[@]}"; do
+        case $opt in
+        "back to vpn server menu")
+            vpnserver
+            ;;
+        "install x-ui (alireza)")
+            echo "https://github.com/alireza0/x-ui"
+            sleep 5
+            bash <(curl -Ls https://raw.githubusercontent.com/alireza0/x-ui/master/install.sh)
+            ;;
+        "install 3x-ui (Sanaei)")
+            echo "https://github.com/MHSanaei/3x-ui"
+            sleep 5
+            bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh)
+            ;;
+        "install x-ui (Kafka)(en)")
+            echo "https://github.com/FranzKafkaYu/x-ui/"
+            sleep 5
+            bash <(curl -Ls https://raw.githubusercontent.com/FranzKafkaYu/x-ui/master/install_en.sh)
+            ;;
+        "install x-ui (chinese)")
+            echo "https://github.com/vaxilu/x-ui/"
+            sleep 5
+            bash <(curl -Ls https://raw.githubusercontent.com/vaxilu/x-ui/master/install.sh)
+            ;;
+
+        *) echo "Invalid option $REPLY" ;;
+        esac
+    done
+
+}
+openconnecti() {
+    clear
+
+    PS3="Please select an option: "
+
+    options=("back to vpn server menu" "install openconnect server (docker base)" "install openconnect server")
+
+    select opt in "${options[@]}"; do
+        case $opt in
+        "back to vpn server menu")
+            vpnserver
+            ;;
+        "install openconnect server (docker base)")
+            echo "https://github.com/samsesh/ocserv-docker"
+            sleep 5
+            dockercheck
+            docker build -t ocserv https://github.com/samsesh/ocserv-docker.git
+            regex='^[0-9]+$'
+
+            echo "Enter a port number (Press Enter for default value '443'): "
+            read port
+
+            if ! [[ $port =~ $regex ]]; then
+                echo "Error: Port number must be a number" >&2
+                exit 1
+            elif [ -z "$port" ]; then
+                port="443"
+            fi
+            docker run --name ocserv --privileged -p $port:443 -p $port:443/udp -d --restart unless-stopped ocserv
+            echo "you use this command for add user"
+            echo "docker exec -ti ocserv ocpasswd -c /etc/ocserv/ocpasswd testUserName"
+            echo "more info https://github.com/samsesh/ocserv-docker#docker-installation"
+            echo "Press any key to exit..."
+            read -n 1 -s
+            vpnserver
+            ;;
+        "install openconnect server")
+            echo "https://github.com/samsesh/ocserv-docker"
+            sleep 5
+            mkdir -p /tmp/lazy/
+            cd /tmp/lazy/
+            wget -N --no-check-certificate https://raw.githubusercontent.com/sfc9982/AnyConnect-Server/main/ocserv-en.sh
+            chmod +x ocserv-en.sh
+            bash ocserv-en.sh
+            vpnserver
+            ;;
+
+        *) echo "Invalid option $REPLY" ;;
+        esac
+    done
+
+}
+wireguardi() {
+    clear
+
+    PS3="Please select an option: "
+
+    options=("back to vpn server menu" "install wireguard" "install wireguard (docker base)")
+
+    select opt in "${options[@]}"; do
+        case $opt in
+        "back to vpn server menu")
+            vpnserver
+            ;;
+        "install wireguard (docker base)")
+            echo "https://github.com/samsesh/wireguard-docker"
+            sleep 5
+            dockercheck
+            mkdir -p /tmp/lazy/
+            git clone https://github.com/samsesh/wireguard-docker.git /tmp/lazy/wg
+
+            echo "Please enter the new value for FILELOCATION (press Enter to use default value of /docker/wireguard):"
+            read file_location
+
+            if [ -z "$file_location" ]; then
+                file_location="/docker/wireguard"
+            fi
+
+            echo "Please enter the new value for USERPEERS (press Enter to use default value of 10):"
+            read user_peers
+
+            if [ -z "$user_peers" ]; then
+                user_peers="10"
+            fi
+
+            echo "Please enter the new value for CONTAINERNAME (press Enter to use default value of wireguard):"
+            read container_name
+
+            if [ -z "$container_name" ]; then
+                container_name="wireguard"
+            fi
+
+            sed -i "s/^FILELOCATION=.*/FILELOCATION=$file_location/g" /tmp/lazy/wg/.env
+            sed -i "s/^USERPEERS=.*/USERPEERS=$user_peers/g" /tmp/lazy/wg/.env
+            sed -i "s/^CONTAINERNAME=.*/CONTAINERNAME=$container_name/g" /tmp/lazy/wg/.env
+
+            pw=$(pwd)
+            cd /tmp/lazy/wg
+            bash install-on-ubuntu.sh
+            cd $pw
+            clear
+            ehco "for show connection qr code use this command"
+            echo "docker exec -it $container_name /app/show-peer 1"
+            echo "more info on https://github.com/samsesh/wireguard-docker"
+            ;;
+        "install wireguard")
+            echo "https://github.com/angristan/wireguard-install"
+            sleep 5
+            bash <(curl -fsSL https://raw.githubusercontent.com/angristan/wireguard-install/master/wireguard-install.sh)
+            vpnserver
+            ;;
+
+        *) echo "Invalid option $REPLY" ;;
+        esac
+    done
+
+}
+openvpni() {
+    clear
+
+    PS3="Please select an option: "
+
+    options=("back to vpn server menu" "install openvpn server (docker base)" "install openvpn server (pritunl)" "install openvpn server")
+
+    select opt in "${options[@]}"; do
+        case $opt in
+        "back to vpn server menu")
+            vpnserver
+            ;;
+        "install openvpn server (docker base)")
+            echo "https://github.com/samsesh/openvpn-dockercompose"
+            sleep 5
+            clear
+            echo "Please enter the new value for FILELOCATION (press Enter to use default value of /docker/wireguard):"
+            read file_location_open
+
+            if [ -z "$file_location_open" ]; then
+                file_location_open="/docker/openvpn-dockercompose"
+            fi
+            echo "Please enter the new value for CONTAINERNAME (press Enter to use default value of openvpn):"
+            read container_name_open
+
+            if [ -z "$container_name_open" ]; then
+                container_name_open="openvpn"
+            fi
+
+            mkdir /docker
+            git clone https://github.com/samsesh/openvpn-dockercompose.git $file_location_open
+            sed -i "s/^container_name:.*/container_name:$container_name_open/g" $file_location_open/docker-compose.yml
+            pw=$(pwd)
+            cd $file_location_open
+            docker-compose run --rm $container_name_open ovpn_initpki
+            docker-compose up -d $container_name_open
+            cd $pw
+            echo "you use this command for add user"
+            echo "docker-compose run --rm $container_name_open easyrsa build-client-full testUserName nopass"
+            echo "more info https://github.com/samsesh/openvpn-dockercompose"
+            echo "Press any key to exit..."
+            read -n 1 -s
+            vpnserver
+            ;;
+        "install openvpn server (pritunl)")
+            echo "https://github.com/samsesh/pritunl-install"
+            sleep 5
+            bash <(curl -sSL https://github.com/samsesh/pritunl-install/raw/Localhost/installfromgithub.sh)
+            ;;
+        "install openvpn server")
+            echo "https://github.com/angristan/openvpn-install"
+            sleep 5
+            bash <(curl -sSL https://raw.githubusercontent.com/angristan/openvpn-install/master/openvpn-install.sh)
+            ;;
+
+        *) echo "Invalid option $REPLY" ;;
+        esac
+    done
+
+}
 fisrtmenu() {
     clear
     echo "$(tput setaf 2)welcome to lazy vpn script$(tput sgr0)"
