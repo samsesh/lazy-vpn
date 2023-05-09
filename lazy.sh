@@ -207,7 +207,7 @@ xrayi() {
 
     PS3="Please select an option: "
 
-    options=("back to vpn server menu" "x-ui (6 script)" "install hiddify" "ShadowSocks ssr" "install Hi_Hysteria (chinese)" "install NaiveProxy (chinese)" "install xray-reality" "marzban (docker base)")
+    options=("back to vpn server menu" "x-Panel (SSH)" "x-ui (6 script)" "install hiddify" "ShadowSocks ssr" "install Hi_Hysteria (chinese)" "install NaiveProxy (chinese)" "install xray-reality" "marzban (docker base)")
 
     select opt in "${options[@]}"; do
         case $opt in
@@ -216,6 +216,11 @@ xrayi() {
             ;;
         "x-ui (6 script)")
             xui
+            ;;
+        "x-Panel (SSH)")
+            echo "https://github.com/Alirezad07/X-Panel-SSH-User-Management"
+            sleep 5
+            bash <(curl -Ls https://raw.githubusercontent.com/Alirezad07/X-Panel-SSH-User-Management/main/install.sh --ipv4)
             ;;
         "install hiddify")
             echo "https://github.com/hiddify/hiddify-config/"
