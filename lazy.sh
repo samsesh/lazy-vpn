@@ -221,6 +221,7 @@ xrayi() {
             echo "https://github.com/Alirezad07/X-Panel-SSH-User-Management"
             sleep 5
             bash <(curl -Ls https://raw.githubusercontent.com/Alirezad07/X-Panel-SSH-User-Management/main/install.sh --ipv4)
+            bash <(curl -Ls https://raw.githubusercontent.com/Alirezad07/X-Panel-SSH-User-Management/master/fix-call.sh --ipv4)
             ;;
         "install hiddify")
             echo "https://github.com/hiddify/hiddify-config/"
