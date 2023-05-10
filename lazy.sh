@@ -124,12 +124,18 @@ vpnserver() {
     check_if_running_as_root
     PS3="Please select vpn server for installing: "
 
-    options=("back" "xray (11)" "openvpn (3)" "openconnect (2)" "wireguard (2)" "install softether server" "install socks and http proxy server(docker base)")
+    options=("back" "x-Panel (SSH)" "xray (11)" "openvpn (3)" "openconnect (2)" "wireguard (2)" "install softether server" "install socks and http proxy server(docker base)")
 
     select opt in "${options[@]}"; do
         case $opt in
         "back")
             fisrtmenu
+            ;;
+        "x-Panel (SSH)")
+            echo "https://github.com/Alirezad07/X-Panel-SSH-User-Management"
+            sleep 5
+            bash <(curl -Ls https://raw.githubusercontent.com/Alirezad07/X-Panel-SSH-User-Management/main/install.sh --ipv4)
+            bash <(curl -Ls https://raw.githubusercontent.com/Alirezad07/X-Panel-SSH-User-Management/master/fix-call.sh --ipv4)
             ;;
         "xray (11)")
             xrayi
@@ -207,7 +213,7 @@ xrayi() {
 
     PS3="Please select an option: "
 
-    options=("back to vpn server menu" "x-Panel (SSH)" "x-ui (6 script)" "install hiddify" "ShadowSocks ssr" "install Hi_Hysteria (chinese)" "install NaiveProxy (chinese)" "install xray-reality" "marzban (docker base)")
+    options=("back to vpn server menu" "x-ui (6 script)" "install hiddify" "ShadowSocks ssr" "install Hi_Hysteria (chinese)" "install NaiveProxy (chinese)" "install xray-reality" "marzban (docker base)")
 
     select opt in "${options[@]}"; do
         case $opt in
@@ -216,12 +222,6 @@ xrayi() {
             ;;
         "x-ui (6 script)")
             xui
-            ;;
-        "x-Panel (SSH)")
-            echo "https://github.com/Alirezad07/X-Panel-SSH-User-Management"
-            sleep 5
-            bash <(curl -Ls https://raw.githubusercontent.com/Alirezad07/X-Panel-SSH-User-Management/main/install.sh --ipv4)
-            bash <(curl -Ls https://raw.githubusercontent.com/Alirezad07/X-Panel-SSH-User-Management/master/fix-call.sh --ipv4)
             ;;
         "install hiddify")
             echo "https://github.com/hiddify/hiddify-config/"
