@@ -38,6 +38,7 @@ tmux a -d -t lazy
 - [openvpn server (pritunl)](https://github.com/samsesh/pritunl-install)
 - [openvpn server](https://github.com/angristan/openvpn-install)
 - [softether server](https://github.com/samsesh/softether-install)
+- [Telegram proxy mtproxy (🐳 docker base)](https://github.com/iShift/docker-compose-mtproxy/)
 - [proxy server (🐳 docker base)](https://github.com/samsesh/3proxy-docker-compose)
 ---
 - [Ubuntu-Optimizer 🐧](https://github.com/samsesh/Ubuntu-Optimizer)
