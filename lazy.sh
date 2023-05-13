@@ -149,6 +149,66 @@ vpnserver() {
         "wireguard (2)")
             wireguardi
             ;;
+        "Telegram proxy (docker base)")
+            echo ""
+            sleep 5
+            dockercheck
+
+            echo "Please enter the new value for FILELOCATION (press Enter to use default value of /docker/docker-compose-mtproxy):"
+            read file_location
+
+            if [ -z "$file_location" ]; then
+                file_location="/docker/docker-compose-mtproxy"
+            fi
+
+            git clone https://github.com/iShift/docker-compose-mtproxy.git $file_location
+
+            echo "Enter a port number for (Press Enter for default value '443'): "
+            read host_port
+
+            if ! [[ $port =~ $regex ]]; then
+                echo "Error: Port number must be a number" >&2
+                exit 1
+            elif [ -z "$host_port" ]; then
+                host_port="443"
+            fi
+            regex='^[0-9]+$'
+
+            # Prompt the user for the tag
+            read -p "Enter the tag (leave empty for random): " tag
+
+            # Generate a random tag if the user didn't provide one
+            if [ -z "$tag" ]; then
+                tag=$(openssl rand -hex 16)
+            fi
+
+            # Prompt the user for the secret
+            read -p "Enter the secret (leave empty for random): " secret
+
+            # Generate a random secret if the user didn't provide one
+            if [ -z "$secret" ]; then
+                secret=$(openssl rand -hex 32)
+            fi
+
+            # Set the path to the config.env file
+            config_file="$file_location/config.env"
+            compose_file="$file_location/docker-compose.yml"
+
+            # Update the values in the config.env file
+            echo "TAG=$tag" >"$config_file"
+            echo "SECRET=$secret" >>"$config_file"
+
+            sed -i "s/443:443/$host_port:443/g" "$compose_file"
+
+            pw=$(pwd)
+            cd $file_location
+            docker compose up -d
+            cd $pw
+            clear
+            echo "done"
+            echo "your tag $tag"
+            echo "your secret $secret"
+            ;;
         "install socks and http proxy server(docker base)")
             echo "https://github.com/samsesh/3proxy-docker-compose"
             sleep 5
@@ -505,7 +565,7 @@ openvpni() {
             echo "https://github.com/samsesh/openvpn-dockercompose"
             sleep 5
             clear
-            echo "Please enter the new value for FILELOCATION (press Enter to use default value of /docker/wireguard):"
+            echo "Please enter the new value for FILELOCATION (press Enter to use default value of /docker/openvpn-dockercompose):"
             read file_location_open
 
             if [ -z "$file_location_open" ]; then
