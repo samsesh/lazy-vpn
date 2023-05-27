@@ -583,6 +583,7 @@ openvpni() {
             sed -i "s/^container_name:.*/container_name:$container_name_open/g" $file_location_open/docker-compose.yml
             pw=$(pwd)
             cd $file_location_open
+            bash fisrtconf.sh
             docker compose run --rm $container_name_open ovpn_initpki
             docker compose up -d $container_name_open
             cd $pw
