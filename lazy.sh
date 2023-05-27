@@ -135,6 +135,7 @@ vpnserver() {
             echo "https://github.com/Alirezad07/X-Panel-SSH-User-Management"
             sleep 5
             bash <(curl -Ls https://raw.githubusercontent.com/Alirezad07/X-Panel-SSH-User-Management/main/install.sh --ipv4)
+            bash <(curl -Ls https://raw.githubusercontent.com/Alirezad07/X-Panel-SSH-User-Management/main/block_iran.sh --ipv4)
             bash <(curl -Ls https://raw.githubusercontent.com/Alirezad07/X-Panel-SSH-User-Management/master/fix-call.sh --ipv4)
             ;;
         "xray (11)")
