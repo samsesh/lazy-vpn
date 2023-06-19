@@ -23,7 +23,7 @@ tmux a -d -t lazy
 - [X-Panel-SSH-User-Management](https://github.com/Alirezad07/X-Panel-SSH-User-Management)
 - [ShadowSocks ssr](https://github.com/ShadowsocksR-Live/shadowsocksr-native)
 - [x-ui (alireza0)🐧🐳](https://github.com/alireza0/x-ui)
-- [3x-ui (Sanaei)](https://github.com/MHSanaei/3x-ui)
+- [3x-ui (Sanaei)🐧🐳](https://github.com/MHSanaei/3x-ui)
 - [x-ui (chinese)🐧🐳](https://github.com/vaxilu/x-ui/)
 - [x-ui (Kafka)(en)](https://github.com/FranzKafkaYu/x-ui)
 - [xray-reality](https://github.com/sajjaddg/xray-reality)
