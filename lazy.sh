@@ -424,8 +424,8 @@ xui() {
             mkdir x-ui && cd x-ui
             docker run -itd \
                 -e XRAY_VMESS_AEAD_FORCED=false \
-                -v $PWD/db/:/etc/x-ui/ \
-                -v $PWD/cert/:/root/cert/ \
+                -v /docker/x-ui/db/:/etc/x-ui/ \
+                -v /docker/x-ui/cert/:/root/cert/ \
                 --network=host \
                 --restart=unless-stopped \
                 --name 3x-ui \
