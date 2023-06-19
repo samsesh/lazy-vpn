@@ -81,7 +81,7 @@ sercvermenu() {
 
     PS3="Please select an option: "
 
-    options=("run Ubuntu-Optimizer" "install docker" "install gost" "install cfwarp"  "install warp on port 4000" "back main menu")
+    options=("run Ubuntu-Optimizer" "install docker" "install gost" "install cfwarp" "install warp on port 4000" "back main menu")
 
     select opt in "${options[@]}"; do
         case $opt in
@@ -289,14 +289,14 @@ xrayi() {
 
     PS3="Please select an option: "
 
-    options=("back to vpn server menu" "x-ui (6 script)" "install hiddify" "ShadowSocks ssr" "install Hi_Hysteria (chinese)" "install NaiveProxy (chinese)" "install xray-reality" "marzban (docker base)")
+    options=("back to vpn server menu" "x-ui (7 script)" "install hiddify" "ShadowSocks ssr" "install Hi_Hysteria (chinese)" "install NaiveProxy (chinese)" "install xray-reality" "marzban (docker base)")
 
     select opt in "${options[@]}"; do
         case $opt in
         "back to vpn server menu")
             vpnserver
             ;;
-        "x-ui (6 script)")
+        "x-ui (7 script)")
             xui
             ;;
         "install hiddify")
@@ -389,7 +389,7 @@ xui() {
     xuicheck
     PS3="Please select an option: "
 
-    options=("back to vpn server menu" "install x-ui (alireza0)" "install x-ui (alireza0)(docker base)" "install 3x-ui (Sanaei)" "install x-ui (Kafka)(en)" "install x-ui (chinese)" "install x-ui (chinese)(docker base)")
+    options=("back to vpn server menu" "install x-ui (alireza0)" "install x-ui (alireza0)(docker base)" "install 3x-ui (Sanaei)" "install x-ui (Sanaei)(docker base)" "install x-ui (Kafka)(en)" "install x-ui (chinese)" "install x-ui (chinese)(docker base)")
     select opt in "${options[@]}"; do
         case $opt in
         "back to vpn server menu")
@@ -414,6 +414,22 @@ xui() {
                 -v /docker/x-ui/cert/:/root/cert/ \
                 --name x-ui --restart=unless-stopped \
                 alireza7/x-ui:latest
+            ;;
+        "install x-ui (Sanaei)(docker base)")
+            echo "https://github.com/alireza0/x-ui"
+            sleep 5
+            dockercheck
+            mkdir /docker
+            cd /docker
+            mkdir x-ui && cd x-ui
+            docker run -itd \
+                -e XRAY_VMESS_AEAD_FORCED=false \
+                -v $PWD/db/:/etc/x-ui/ \
+                -v $PWD/cert/:/root/cert/ \
+                --network=host \
+                --restart=unless-stopped \
+                --name 3x-ui \
+                ghcr.io/mhsanaei/3x-ui:latest
             ;;
         "install 3x-ui (Sanaei)")
             echo "https://github.com/MHSanaei/3x-ui"
