@@ -81,7 +81,7 @@ sercvermenu() {
 
     PS3="Please select an option: "
 
-    options=("run Ubuntu-Optimizer" "install docker" "install cfwarp" "back main menu")
+    options=("run Ubuntu-Optimizer" "install docker" "install gost" "install cfwarp"  "install warp on port 4000" "back main menu")
 
     select opt in "${options[@]}"; do
         case $opt in
@@ -93,6 +93,17 @@ sercvermenu() {
             echo "install docker"
             dockercheck
             ;;
+        "install gost")
+            echo "install gost"
+            if ! command -v gost &>/dev/null; then
+                echo $(tput setaf 2)gost is not installed on this system. Installing Gost...$(tput sgr0)
+                bash <(curl -fsSL https://github.com/samsesh/gost/raw/master/install.sh) --install
+
+                echo $(tput setaf 2)gost has been installed successfully!$(tput sgr0)
+            else
+                echo $(tput setaf 2)gost is already installed on this system.$(tput sgr0)
+            fi
+            ;;
         "install cfwarp")
             # Download and run CFwarp.sh script
             wget -N https://gitlab.com/rwkgyg/CFwarp/raw/main/CFwarp.sh && bash CFwarp.sh <<EOF
@@ -101,6 +112,10 @@ sercvermenu() {
 3
 EOF
             clear
+            ;;
+        "install warp on port 4000")
+            echo "install warp"
+            bash <(curl -sSL https://gist.githubusercontent.com/hamid-gh98/dc5dd9b0cc5b0412af927b1ccdb294c7/raw/install_warp_proxy.sh)
             ;;
         "back main menu")
             fisrtmenu
