@@ -44,4 +44,4 @@ tmux a -d -t lazy
 - [Ubuntu-Optimizer 🐧](https://github.com/samsesh/Ubuntu-Optimizer)
 - [cfwarp repository link](https://gitlab.com/rwkgyg/CFwarp/)
 - [GO Simple Tunnel](https://github.com/samsesh/gost)
-- [warp on port 4000](hhttps://gist.githubusercontent.com/hamid-gh98)
+- [warp on port 4000](https://gist.githubusercontent.com/hamid-gh98)
