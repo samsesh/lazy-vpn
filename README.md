@@ -19,6 +19,7 @@ tmux a -d -t lazy
 ## link 
 - [best VPN list on my github](https://github.com/stars/samsesh/lists/vpn)
 ---
+- [Juicity](https://github.com/samsesh/Juicity-Installer)
 - [hiddify](https://github.com/hiddify/hiddify-config/)
 - [X-Panel-SSH-User-Management](https://github.com/Alirezad07/X-Panel-SSH-User-Management)
 - [ShadowSocks ssr](https://github.com/ShadowsocksR-Live/shadowsocksr-native)

@@ -139,12 +139,17 @@ vpnserver() {
     check_if_running_as_root
     PS3="Please select vpn server for installing: "
 
-    options=("back" "x-Panel (SSH)" "xray (11)" "openvpn (3)" "openconnect (2)" "wireguard (2)" "install softether server" "install socks and http proxy server(docker base)")
+    options=("back" "Juicity" "x-Panel (SSH)" "xray (11)" "openvpn (3)" "openconnect (2)" "wireguard (2)" "install softether server" "install socks and http proxy server(docker base)")
 
     select opt in "${options[@]}"; do
         case $opt in
         "back")
             fisrtmenu
+            ;;
+        "Juicity")
+            echo "https://github.com/samsesh/Juicity-Installer"
+            sleep 5
+            bash <(curl -fsSL https://raw.githubusercontent.com/samsesh/Juicity-Installer/main/juicity-installer.sh)
             ;;
         "x-Panel (SSH)")
             echo "https://github.com/Alirezad07/X-Panel-SSH-User-Management"
