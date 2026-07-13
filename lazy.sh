@@ -56,6 +56,92 @@ check_dependencies() {
 }
 
 # ─────────────────────────────────────────────────────
+# VPN Detection
+# ─────────────────────────────────────────────────────
+scan_vpn_services() {
+    local found=0
+
+    # Systemd services
+    local services=("wg-quick@wg0" "wireguard" "openvpn" "ocserv" "x-ui" "3x-ui"
+                     "pritunl" "softether" "hysteria" "naiveproxy")
+
+    for svc in "${services[@]}"; do
+        if systemctl is-active --quiet "$svc" 2>/dev/null; then
+            print_warn "Running service: $svc"
+            found=1
+        fi
+    done
+
+    # Docker containers
+    if command -v docker &>/dev/null; then
+        local containers
+        containers=$(docker ps --format '{{.Names}} {{.Image}}' 2>/dev/null || true)
+        if [[ -n "$containers" ]]; then
+            while IFS= read -r line; do
+                local name image
+                name=$(echo "$line" | awk '{print $1}')
+                image=$(echo "$line" | awk '{print $2}')
+                case "$image" in
+                    *x-ui*|*3x-ui*|*alireza*|*mhsanaei*)
+                        print_warn "Running Docker container: $name ($image)"
+                        found=1 ;;
+                    *wireguard*|*wg*)
+                        print_warn "Running Docker container: $name ($image)"
+                        found=1 ;;
+                    *openvpn*)
+                        print_warn "Running Docker container: $name ($image)"
+                        found=1 ;;
+                    *ocserv*|*openconnect*)
+                        print_warn "Running Docker container: $name ($image)"
+                        found=1 ;;
+                    *marzban*)
+                        print_warn "Running Docker container: $name ($image)"
+                        found=1 ;;
+                    *3proxy*)
+                        print_warn "Running Docker container: $name ($image)"
+                        found=1 ;;
+                    *hysteria*)
+                        print_warn "Running Docker container: $name ($image)"
+                        found=1 ;;
+                esac
+            done <<< "$containers"
+        fi
+    fi
+
+    # Listening ports (common VPN ports)
+    local ports
+    ports=$(ss -tlnp 2>/dev/null | awk 'NR>1 {print $4}' | grep -oP ':\K[0-9]+' | sort -un || true)
+    local vpn_ports=("51820" "1194" "443" "8443" "54321" "2053" "8080" "3128" "1080")
+    local used_ports=()
+    for vp in "${vpn_ports[@]}"; do
+        if echo "$ports" | grep -qx "$vp"; then
+            used_ports+=("$vp")
+        fi
+    done
+
+    if [[ ${#used_ports[@]} -gt 0 ]]; then
+        echo ""
+        print_section "Ports in use (possible VPN services)"
+        echo "  ${used_ports[*]}"
+    fi
+
+    if [[ $found -eq 0 ]] && [[ ${#used_ports[@]} -eq 0 ]]; then
+        print_info "No existing VPN services detected."
+    fi
+
+    return $found
+}
+
+confirm_install() {
+    local service="$1"
+    echo ""
+    print_warn "Existing VPN services detected above."
+    read -p "Continue installing $service? (y/N): " confirm
+    [[ "$confirm" =~ ^[Yy]$ ]] || return 1
+    return 0
+}
+
+# ─────────────────────────────────────────────────────
 # Docker Management
 # ─────────────────────────────────────────────────────
 docker_check() {
@@ -111,6 +197,8 @@ menu_xray() {
     while true; do
         clear
         print_header
+        scan_vpn_services || true
+        echo ""
         echo -e "${BOLD}Xray & Proxy Solutions${NC}"
         echo ""
         echo "  1)  Back"
@@ -132,81 +220,107 @@ menu_xray() {
         case $choice in
             1) return ;;
             2)
-                print_info "Installing X-UI (alireza0)..."
-                bash <(curl -Ls https://raw.githubusercontent.com/alireza0/x-ui/master/install.sh)
+                if confirm_install "X-UI (alireza0)"; then
+                    print_info "Installing X-UI (alireza0)..."
+                    bash <(curl -Ls https://raw.githubusercontent.com/alireza0/x-ui/master/install.sh)
+                fi
                 ;;
             3)
-                docker_check
-                mkdir -p /docker/x-ui
-                docker run -itd \
-                    -p 54321:54321 -p 443:443 -p 80:80 \
-                    -e XRAY_VMESS_AEAD_FORCED=false \
-                    -v /docker/x-ui/db/:/etc/x-ui/ \
-                    -v /docker/x-ui/cert/:/root/cert/ \
-                    --name x-ui --restart=unless-stopped \
-                    alireza7/x-ui:latest
-                print_info "X-UI (Docker) installed. Panel: http://<your-ip>:54321"
+                if confirm_install "X-UI (Docker)"; then
+                    docker_check
+                    mkdir -p /docker/x-ui
+                    docker run -itd \
+                        -p 54321:54321 -p 443:443 -p 80:80 \
+                        -e XRAY_VMESS_AEAD_FORCED=false \
+                        -v /docker/x-ui/db/:/etc/x-ui/ \
+                        -v /docker/x-ui/cert/:/root/cert/ \
+                        --name x-ui --restart=unless-stopped \
+                        alireza7/x-ui:latest
+                    print_info "X-UI (Docker) installed. Panel: http://<your-ip>:54321"
+                fi
                 ;;
             4)
-                print_info "Installing 3X-UI (Sanaei)..."
-                bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh)
+                if confirm_install "3X-UI (Sanaei)"; then
+                    print_info "Installing 3X-UI (Sanaei)..."
+                    bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh)
+                fi
                 ;;
             5)
-                docker_check
-                mkdir -p /docker/x-ui
-                docker run -itd \
-                    -e XRAY_VMESS_AEAD_FORCED=false \
-                    -v /docker/x-ui/db/:/etc/x-ui/ \
-                    -v /docker/x-ui/cert/:/root/cert/ \
-                    --network=host \
-                    --restart=unless-stopped \
-                    --name 3x-ui \
-                    ghcr.io/mhsanaei/3x-ui:latest
-                print_info "3X-UI (Docker) installed."
+                if confirm_install "3X-UI (Docker)"; then
+                    docker_check
+                    mkdir -p /docker/x-ui
+                    docker run -itd \
+                        -e XRAY_VMESS_AEAD_FORCED=false \
+                        -v /docker/x-ui/db/:/etc/x-ui/ \
+                        -v /docker/x-ui/cert/:/root/cert/ \
+                        --network=host \
+                        --restart=unless-stopped \
+                        --name 3x-ui \
+                        ghcr.io/mhsanaei/3x-ui:latest
+                    print_info "3X-UI (Docker) installed."
+                fi
                 ;;
             6)
-                print_info "Installing X-UI (Kafka)..."
-                bash <(curl -Ls https://raw.githubusercontent.com/FranzKafkaYu/x-ui/master/install_en.sh)
+                if confirm_install "X-UI (Kafka)"; then
+                    print_info "Installing X-UI (Kafka)..."
+                    bash <(curl -Ls https://raw.githubusercontent.com/FranzKafkaYu/x-ui/master/install_en.sh)
+                fi
                 ;;
             7)
-                print_info "Installing X-UI (Chinese)..."
-                bash <(curl -Ls https://raw.githubusercontent.com/vaxilu/x-ui/master/install.sh)
+                if confirm_install "X-UI (Chinese)"; then
+                    print_info "Installing X-UI (Chinese)..."
+                    bash <(curl -Ls https://raw.githubusercontent.com/vaxilu/x-ui/master/install.sh)
+                fi
                 ;;
             8)
-                docker_check
-                mkdir -p /docker/x-ui
-                docker run -itd --network=host \
-                    -v /docker/x-ui/db/:/etc/x-ui/ \
-                    -v /docker/x-ui/cert/:/root/cert/ \
-                    --name x-ui --restart=unless-stopped \
-                    enwaiax/x-ui:latest
-                print_info "X-UI Chinese (Docker) installed."
+                if confirm_install "X-UI Chinese (Docker)"; then
+                    docker_check
+                    mkdir -p /docker/x-ui
+                    docker run -itd --network=host \
+                        -v /docker/x-ui/db/:/etc/x-ui/ \
+                        -v /docker/x-ui/cert/:/root/cert/ \
+                        --name x-ui --restart=unless-stopped \
+                        enwaiax/x-ui:latest
+                    print_info "X-UI Chinese (Docker) installed."
+                fi
                 ;;
             9)
-                print_info "Installing Hiddify..."
-                bash -c "$(curl -Lfo- https://raw.githubusercontent.com/hiddify/hiddify-config/main/common/download_install.sh)"
+                if confirm_install "Hiddify"; then
+                    print_info "Installing Hiddify..."
+                    bash -c "$(curl -Lfo- https://raw.githubusercontent.com/hiddify/hiddify-config/main/common/download_install.sh)"
+                fi
                 ;;
             10)
-                print_info "Installing ShadowSocksR..."
-                echo "net.core.default_qdisc=fq" >> /etc/sysctl.conf
-                echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.conf
-                sysctl -p &>/dev/null
-                bash <(curl -Ls https://raw.githubusercontent.com/ShadowsocksR-Live/shadowsocksr-native/master/install/ssrn-install.sh)
+                if confirm_install "ShadowSocksR"; then
+                    print_info "Installing ShadowSocksR..."
+                    echo "net.core.default_qdisc=fq" >> /etc/sysctl.conf
+                    echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.conf
+                    sysctl -p &>/dev/null
+                    bash <(curl -Ls https://raw.githubusercontent.com/ShadowsocksR-Live/shadowsocksr-native/master/install/ssrn-install.sh)
+                fi
                 ;;
             11)
-                print_info "Installing Hi Hysteria..."
-                bash <(curl -fsSL https://git.io/hysteria.sh)
+                if confirm_install "Hi Hysteria"; then
+                    print_info "Installing Hi Hysteria..."
+                    bash <(curl -fsSL https://git.io/hysteria.sh)
+                fi
                 ;;
             12)
-                print_info "Installing NaiveProxy..."
-                bash <(curl -fsSL https://gitlab.com/rwkgyg/naiveproxy-yg/raw/main/naiveproxy.sh)
+                if confirm_install "NaiveProxy"; then
+                    print_info "Installing NaiveProxy..."
+                    bash <(curl -fsSL https://gitlab.com/rwkgyg/naiveproxy-yg/raw/main/naiveproxy.sh)
+                fi
                 ;;
             13)
-                print_info "Installing Xray Reality..."
-                bash -c "$(curl -L https://raw.githubusercontent.com/sajjaddg/xray-reality/master/install.sh)"
+                if confirm_install "Xray Reality"; then
+                    print_info "Installing Xray Reality..."
+                    bash -c "$(curl -L https://raw.githubusercontent.com/sajjaddg/xray-reality/master/install.sh)"
+                fi
                 ;;
             14)
-                menu_marzban
+                if confirm_install "Marzban"; then
+                    menu_marzban
+                fi
                 ;;
             *) print_error "Invalid option" ;;
         esac
@@ -248,6 +362,8 @@ menu_wireguard() {
     while true; do
         clear
         print_header
+        scan_vpn_services || true
+        echo ""
         echo -e "${BOLD}WireGuard${NC}"
         echo ""
         echo "  1)  Back"
@@ -258,26 +374,30 @@ menu_wireguard() {
         case $choice in
             1) return ;;
             2)
-                print_info "Installing WireGuard..."
-                bash <(curl -fsSL https://raw.githubusercontent.com/angristan/wireguard-install/master/wireguard-install.sh)
+                if confirm_install "WireGuard"; then
+                    print_info "Installing WireGuard..."
+                    bash <(curl -fsSL https://raw.githubusercontent.com/angristan/wireguard-install/master/wireguard-install.sh)
+                fi
                 ;;
             3)
-                docker_check
-                print_info "Installing WireGuard (Docker)..."
-                git clone https://github.com/samsesh/wireguard-docker.git /tmp/lazy-wg
-                read -p "Install path [/docker/wireguard]: " wg_path
-                wg_path="${wg_path:-/docker/wireguard}"
-                read -p "Number of peers [10]: " wg_peers
-                wg_peers="${wg_peers:-10}"
-                read -p "Container name [wireguard]: " wg_name
-                wg_name="${wg_name:-wireguard}"
+                if confirm_install "WireGuard (Docker)"; then
+                    docker_check
+                    print_info "Installing WireGuard (Docker)..."
+                    git clone https://github.com/samsesh/wireguard-docker.git /tmp/lazy-wg
+                    read -p "Install path [/docker/wireguard]: " wg_path
+                    wg_path="${wg_path:-/docker/wireguard}"
+                    read -p "Number of peers [10]: " wg_peers
+                    wg_peers="${wg_peers:-10}"
+                    read -p "Container name [wireguard]: " wg_name
+                    wg_name="${wg_name:-wireguard}"
 
-                sed -i "s/^FILELOCATION=.*/FILELOCATION=$wg_path/g" /tmp/lazy-wg/.env
-                sed -i "s/^USERPEERS=.*/USERPEERS=$wg_peers/g" /tmp/lazy-wg/.env
-                sed -i "s/^CONTAINERNAME=.*/CONTAINERNAME=$wg_name/g" /tmp/lazy-wg/.env
+                    sed -i "s/^FILELOCATION=.*/FILELOCATION=$wg_path/g" /tmp/lazy-wg/.env
+                    sed -i "s/^USERPEERS=.*/USERPEERS=$wg_peers/g" /tmp/lazy-wg/.env
+                    sed -i "s/^CONTAINERNAME=.*/CONTAINERNAME=$wg_name/g" /tmp/lazy-wg/.env
 
-                (cd /tmp/lazy-wg && bash install-on-ubuntu.sh)
-                print_info "WireGuard installed! Show QR: docker exec -it $wg_name /app/show-peer 1"
+                    (cd /tmp/lazy-wg && bash install-on-ubuntu.sh)
+                    print_info "WireGuard installed! Show QR: docker exec -it $wg_name /app/show-peer 1"
+                fi
                 ;;
             *) print_error "Invalid option" ;;
         esac
@@ -290,6 +410,8 @@ menu_openvpn() {
     while true; do
         clear
         print_header
+        scan_vpn_services || true
+        echo ""
         echo -e "${BOLD}OpenVPN${NC}"
         echo ""
         echo "  1)  Back"
@@ -301,30 +423,36 @@ menu_openvpn() {
         case $choice in
             1) return ;;
             2)
-                print_info "Installing OpenVPN..."
-                bash <(curl -sSL https://raw.githubusercontent.com/angristan/openvpn-install/master/openvpn-install.sh)
+                if confirm_install "OpenVPN"; then
+                    print_info "Installing OpenVPN..."
+                    bash <(curl -sSL https://raw.githubusercontent.com/angristan/openvpn-install/master/openvpn-install.sh)
+                fi
                 ;;
             3)
-                docker_check
-                print_info "Installing OpenVPN (Docker)..."
-                read -p "Install path [/docker/openvpn]: " ovpn_path
-                ovpn_path="${ovpn_path:-/docker/openvpn}"
-                read -p "Container name [openvpn]: " ovpn_name
-                ovpn_name="${ovpn_name:-openvpn}"
+                if confirm_install "OpenVPN (Docker)"; then
+                    docker_check
+                    print_info "Installing OpenVPN (Docker)..."
+                    read -p "Install path [/docker/openvpn]: " ovpn_path
+                    ovpn_path="${ovpn_path:-/docker/openvpn}"
+                    read -p "Container name [openvpn]: " ovpn_name
+                    ovpn_name="${ovpn_name:-openvpn}"
 
-                mkdir -p "$ovpn_path"
-                git clone https://github.com/samsesh/openvpn-dockercompose.git "$ovpn_path"
-                sed -i "s/^container_name:.*/container_name:$ovpn_name/g" "$ovpn_path/docker-compose.yml"
+                    mkdir -p "$ovpn_path"
+                    git clone https://github.com/samsesh/openvpn-dockercompose.git "$ovpn_path"
+                    sed -i "s/^container_name:.*/container_name:$ovpn_name/g" "$ovpn_path/docker-compose.yml"
 
-                (cd "$ovpn_path" && bash fisrtconf.sh && \
-                    docker compose run --rm "$ovpn_name" ovpn_initpki && \
-                    docker compose up -d "$ovpn_name")
+                    (cd "$ovpn_path" && bash fisrtconf.sh && \
+                        docker compose run --rm "$ovpn_name" ovpn_initpki && \
+                        docker compose up -d "$ovpn_name")
 
-                print_info "OpenVPN installed! Add user: docker-compose run --rm $ovpn_name easyrsa build-client-full <username> nopass"
+                    print_info "OpenVPN installed! Add user: docker-compose run --rm $ovpn_name easyrsa build-client-full <username> nopass"
+                fi
                 ;;
             4)
-                print_info "Installing Pritunl..."
-                bash <(curl -sSL https://github.com/samsesh/pritunl-install/raw/Localhost/installfromgithub.sh)
+                if confirm_install "Pritunl"; then
+                    print_info "Installing Pritunl..."
+                    bash <(curl -sSL https://github.com/samsesh/pritunl-install/raw/Localhost/installfromgithub.sh)
+                fi
                 ;;
             *) print_error "Invalid option" ;;
         esac
@@ -337,6 +465,8 @@ menu_openconnect() {
     while true; do
         clear
         print_header
+        scan_vpn_services || true
+        echo ""
         echo -e "${BOLD}OpenConnect${NC}"
         echo ""
         echo "  1)  Back"
@@ -347,21 +477,25 @@ menu_openconnect() {
         case $choice in
             1) return ;;
             2)
-                print_info "Installing OpenConnect..."
-                mkdir -p /tmp/lazy && cd /tmp/lazy
-                wget -N --no-check-certificate https://raw.githubusercontent.com/sfc9982/AnyConnect-Server/main/ocserv-en.sh
-                chmod +x ocserv-en.sh && bash ocserv-en.sh
+                if confirm_install "OpenConnect"; then
+                    print_info "Installing OpenConnect..."
+                    mkdir -p /tmp/lazy && cd /tmp/lazy
+                    wget -N --no-check-certificate https://raw.githubusercontent.com/sfc9982/AnyConnect-Server/main/ocserv-en.sh
+                    chmod +x ocserv-en.sh && bash ocserv-en.sh
+                fi
                 ;;
             3)
-                docker_check
-                print_info "Installing OpenConnect (Docker)..."
-                docker build -t ocserv https://github.com/samsesh/ocserv-docker.git
-                read -p "Port [443]: " oc_port
-                oc_port="${oc_port:-443}"
-                docker run --name ocserv --privileged \
-                    -p "$oc_port":443 -p "$oc_port":443/udp \
-                    -d --restart unless-stopped ocserv
-                print_info "OpenConnect installed! Add user: docker exec -ti ocserv ocpasswd -c /etc/ocserv/ocpasswd <username>"
+                if confirm_install "OpenConnect (Docker)"; then
+                    docker_check
+                    print_info "Installing OpenConnect (Docker)..."
+                    docker build -t ocserv https://github.com/samsesh/ocserv-docker.git
+                    read -p "Port [443]: " oc_port
+                    oc_port="${oc_port:-443}"
+                    docker run --name ocserv --privileged \
+                        -p "$oc_port":443 -p "$oc_port":443/udp \
+                        -d --restart unless-stopped ocserv
+                    print_info "OpenConnect installed! Add user: docker exec -ti ocserv ocpasswd -c /etc/ocserv/ocpasswd <username>"
+                fi
                 ;;
             *) print_error "Invalid option" ;;
         esac
@@ -506,6 +640,8 @@ menu_vpn_servers() {
     while true; do
         clear
         print_header
+        scan_vpn_services || true
+        echo ""
         echo -e "${BOLD}VPN Servers${NC}"
         echo ""
         echo "  1)  Back"
@@ -525,20 +661,26 @@ menu_vpn_servers() {
             3) menu_openvpn ;;
             4) menu_openconnect ;;
             5)
-                print_info "Installing SoftEther..."
-                git clone https://github.com/samsesh/softether-install.git /tmp/lazy-se
-                (cd /tmp/lazy-se && bash install.sh)
+                if confirm_install "SoftEther"; then
+                    print_info "Installing SoftEther..."
+                    git clone https://github.com/samsesh/softether-install.git /tmp/lazy-se
+                    (cd /tmp/lazy-se && bash install.sh)
+                fi
                 ;;
             6) menu_xray ;;
             7)
-                print_info "Installing Juicity..."
-                bash <(curl -fsSL https://raw.githubusercontent.com/samsesh/Juicity-Installer/main/juicity-installer.sh)
+                if confirm_install "Juicity"; then
+                    print_info "Installing Juicity..."
+                    bash <(curl -fsSL https://raw.githubusercontent.com/samsesh/Juicity-Installer/main/juicity-installer.sh)
+                fi
                 ;;
             8)
-                print_info "Installing X-Panel SSH..."
-                bash <(curl -Ls https://raw.githubusercontent.com/Alirezad07/X-Panel-SSH-User-Management/main/install.sh --ipv4)
-                bash <(curl -Ls https://raw.githubusercontent.com/Alirezad07/X-Panel-SSH-User-Management/main/block_iran.sh --ipv4)
-                bash <(curl -Ls https://raw.githubusercontent.com/Alirezad07/X-Panel-SSH-User-Management/master/fix-call.sh --ipv4)
+                if confirm_install "X-Panel SSH"; then
+                    print_info "Installing X-Panel SSH..."
+                    bash <(curl -Ls https://raw.githubusercontent.com/Alirezad07/X-Panel-SSH-User-Management/main/install.sh --ipv4)
+                    bash <(curl -Ls https://raw.githubusercontent.com/Alirezad07/X-Panel-SSH-User-Management/main/block_iran.sh --ipv4)
+                    bash <(curl -Ls https://raw.githubusercontent.com/Alirezad07/X-Panel-SSH-User-Management/master/fix-call.sh --ipv4)
+                fi
                 ;;
             9) menu_censorship_resistance ;;
             *) print_error "Invalid option" ;;
