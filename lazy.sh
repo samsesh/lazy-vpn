@@ -38,19 +38,63 @@ check_root() {
 }
 
 check_os() {
-    if ! grep -qi 'ubuntu' /etc/os-release 2>/dev/null; then
-        print_warn "This script is designed for Ubuntu. Proceed with caution."
-        read -p "Continue anyway? (y/N): " confirm
-        [[ "$confirm" =~ ^[Yy]$ ]] || exit 0
+    if [[ ! -f /etc/os-release ]]; then
+        print_error "Cannot detect OS. /etc/os-release not found."
+        exit 1
     fi
+
+    . /etc/os-release
+    DISTRO="${ID:-unknown}"
+    DISTRO_LIKE="${ID_LIKE:-$ID}"
+
+    case "$DISTRO" in
+        ubuntu|debian|linuxmint|pop)
+            PKG_MANAGER="apt-get"
+            ;;
+        fedora|rhel|centos|rocky|alma)
+            PKG_MANAGER="dnf"
+            ;;
+        arch|manjaro|endeavouros)
+            PKG_MANAGER="pacman"
+            ;;
+        opensuse*|sles)
+            PKG_MANAGER="zypper"
+            ;;
+        alpine)
+            PKG_MANAGER="apk"
+            ;;
+        *)
+            if echo "$DISTRO_LIKE" | grep -qiE 'debian|ubuntu'; then
+                PKG_MANAGER="apt-get"
+            elif echo "$DISTRO_LIKE" | grep -qiE 'rhel|fedora'; then
+                PKG_MANAGER="dnf"
+            else
+                print_warn "Unsupported distro: $DISTRO. Proceed with caution."
+                PKG_MANAGER="apt-get"
+            fi
+            ;;
+    esac
+
+    print_info "Detected: $PRETTY_NAME (package manager: $PKG_MANAGER)"
+}
+
+install_pkg() {
+    local pkg="$1"
+    case "$PKG_MANAGER" in
+        apt-get) apt-get install -y "$pkg" &>/dev/null ;;
+        dnf)     dnf install -y "$pkg" &>/dev/null ;;
+        pacman)  pacman -S --noconfirm "$pkg" &>/dev/null ;;
+        zypper)  zypper install -y "$pkg" &>/dev/null ;;
+        apk)     apk add "$pkg" &>/dev/null ;;
+    esac
 }
 
 check_dependencies() {
-    local deps=("curl" "wget")
+    local deps=("curl" "wget" "git")
     for dep in "${deps[@]}"; do
         if ! command -v "$dep" &>/dev/null; then
             print_info "Installing $dep..."
-            apt-get install -y "$dep" &>/dev/null
+            install_pkg "$dep"
         fi
     done
 }
@@ -505,6 +549,109 @@ menu_openconnect() {
 }
 
 # ─────────────────────────────────────────────────────
+# AmneziaWG Installer
+# ─────────────────────────────────────────────────────
+menu_amneziawg() {
+    while true; do
+        clear
+        print_header
+        echo -e "${BOLD}AmneziaWG 2.0${NC}"
+        echo ""
+        echo "  AmneziaWG is an advanced WireGuard fork that mimics"
+        echo "  legitimate UDP traffic to bypass DPI systems."
+        echo ""
+        echo "  1)  Back"
+        echo "  2)  Install AmneziaWG kernel module"
+        echo "  3)  Check if AmneziaWG is installed"
+        echo "  4)  Show setup instructions (via AmneziaVPN app)"
+        echo ""
+        read -p "Select option: " choice
+        case $choice in
+            1) return ;;
+            2)
+                print_info "Installing AmneziaWG kernel module..."
+                if lsmod | grep -q awg; then
+                    print_warn "AmneziaWG module already loaded"
+                else
+                    if ! dpkg -l | grep -q linux-headers; then
+                        print_info "Installing kernel headers..."
+                        apt-get install -y linux-headers-"$(uname -r)" &>/dev/null || true
+                    fi
+
+                    print_info "Cloning AmneziaWG repository..."
+                    git clone https://github.com/amnezia-vpn/amnezia-wg.git /tmp/amnezia-wg
+
+                    (cd /tmp/amnezia-wg && make)
+                    cp /tmp/amnezia-wg/amneziawg.ko /lib/modules/"$(uname -r)"/kernel/drivers/net/wireguard/
+                    depmod -a
+                    modprobe amneziawg
+
+                    print_info "AmneziaWG kernel module installed!"
+                    echo ""
+                    echo "  Next steps:"
+                    echo "    1. Install AmneziaVPN app (>= v4.8.12.9) on your desktop/phone"
+                    echo "       Download: https://amnezia.org/downloads"
+                    echo "    2. Add your server to the app via SSH"
+                    echo "    3. The app will auto-install AmneziaWG 2.0 protocol on the server"
+                    echo "    4. Generate client configs and connect"
+                    echo ""
+                    echo "  Docs: https://docs.amnezia.org/documentation/instructions/new-amneziawg-selfhosted"
+                fi
+                ;;
+            3)
+                print_info "Checking AmneziaWG installation..."
+                if lsmod | grep -q awg; then
+                    print_info "AmneziaWG kernel module: LOADED"
+                    lsmod | grep awg
+                else
+                    print_warn "AmneziaWG kernel module: NOT LOADED"
+                fi
+                echo ""
+                if command -v awg &>/dev/null; then
+                    print_info "AmneziaWG tools: INSTALLED ($(awg --version 2>&1 | head -1))"
+                else
+                    print_warn "AmneziaWG tools: NOT INSTALLED"
+                fi
+                echo ""
+                if [[ -d /etc/amnezia ]]; then
+                    print_info "AmneziaWG config directory: /etc/amnezia"
+                    ls /etc/amnezia/ 2>/dev/null
+                fi
+                ;;
+            4)
+                clear
+                print_section "AmneziaWG 2.0 Server Setup Guide"
+                echo ""
+                echo "  AmneziaWG 2.0 is installed via the AmneziaVPN desktop app."
+                echo "  No manual server-side configuration is needed."
+                echo ""
+                echo "  Steps:"
+                echo "    1. Download AmneziaVPN >= v4.8.12.9"
+                echo "       https://amnezia.org/downloads"
+                echo ""
+                echo "    2. Open the app → click your server connection"
+                echo ""
+                echo "    3. Click the gear icon (⚙️) → see installed protocols"
+                echo ""
+                echo "    4. Click the download icon (📥) next to AmneziaWG"
+                echo "       → click 'Install'"
+                echo ""
+                echo "    5. Done! The protocol is now available for sharing."
+                echo ""
+                echo "  Tip: Change the default port to something below 9999"
+                echo "       (e.g., 585 or 1234) to avoid high-port UDP blocks."
+                echo ""
+                echo "  Docs: https://docs.amnezia.org/documentation/instructions/new-amneziawg-selfhosted"
+                echo ""
+                ;;
+            *) print_error "Invalid option" ;;
+        esac
+        echo ""
+        read -p "Press Enter to continue..."
+    done
+}
+
+# ─────────────────────────────────────────────────────
 # Censorship Resistance
 # ─────────────────────────────────────────────────────
 menu_censorship_resistance() {
@@ -526,44 +673,24 @@ menu_censorship_resistance() {
         case $choice in
             1) return ;;
             2)
-                print_info "PasarGuard Panel — Unified GUI Censorship Resistant Solution"
-                echo ""
-                echo "  GitHub:    https://github.com/PasarGuard/panel"
-                echo "  Docs:      https://docs.pasargard.org"
-                echo ""
-                echo "  Install via Docker:"
-                echo "    git clone https://github.com/PasarGuard/panel.git"
-                echo "    cd panel && docker compose up -d"
-                echo ""
+                if confirm_install "PasarGuard Panel"; then
+                    docker_check
+                    print_info "Installing PasarGuard Panel..."
+                    git clone https://github.com/PasarGuard/panel.git /opt/pasarguard-panel
+                    (cd /opt/pasarguard-panel && docker compose up -d)
+                    print_info "PasarGuard Panel installed! Docs: https://docs.pasarguard.org"
+                fi
                 ;;
             3)
-                print_info "PasarGuard Node — Decentralized Censorship-Resistant Access Layer"
-                echo ""
-                echo "  GitHub:    https://github.com/PasarGuard/node"
-                echo ""
-                echo "  Build from source:"
-                echo "    git clone https://github.com/PasarGuard/node.git"
-                echo "    cd node && go build"
-                echo ""
+                if confirm_install "PasarGuard Node"; then
+                    print_info "Installing PasarGuard Node..."
+                    bash <(curl -sL https://github.com/PasarGuard/scripts/raw/main/pg-node.sh) @ install
+                fi
                 ;;
             4)
-                print_info "AmneziaWG 2.0 — Advanced Anti-DPI WireGuard Fork"
-                echo ""
-                echo "  Blog:      https://amnezia.org/blog/amneziawg-2-0-available-for-self-hosted"
-                echo "  Docs:      https://docs.amnezia.org/documentation/amnezia-wg/"
-                echo ""
-                echo "  Features:"
-                echo "    - Custom Protocol Signatures (CPS) for traffic mimicry"
-                echo "    - Per-packet padding to defeat statistical analysis"
-                echo "    - Dynamic header ranges to prevent pattern recognition"
-                echo "    - Mimics DNS, QUIC, and SIP traffic"
-                echo ""
-                echo "  To install on your server:"
-                echo "    1. Install AmneziaVPN app >= v4.8.12.9"
-                echo "    2. Connect to your server"
-                echo "    3. Click gear icon → install AmneziaWG"
-                echo "    4. Generate fresh client configs for AWG 2.0"
-                echo ""
+                if confirm_install "AmneziaWG 2.0"; then
+                    menu_amneziawg
+                fi
                 ;;
             5)
                 print_info "AmneziaVPN Client"
@@ -573,6 +700,381 @@ menu_censorship_resistance() {
                 echo "  Android:   https://play.google.com/store/apps/details?id=org.amnezia.vpn"
                 echo "  iOS:       https://apps.apple.com/us/app/amneziavpn/id1600529900"
                 echo ""
+                ;;
+            *) print_error "Invalid option" ;;
+        esac
+        echo ""
+        read -p "Press Enter to continue..."
+    done
+}
+
+# ─────────────────────────────────────────────────────
+# Uninstaller
+# ─────────────────────────────────────────────────────
+_uninstall_all() {
+    # WireGuard
+    if systemctl is-active --quiet wg-quick@wg0 2>/dev/null; then
+        systemctl stop wg-quick@wg0; systemctl disable wg-quick@wg0
+    fi
+    apt-get remove -y wireguard wireguard-tools 2>/dev/null || true
+    rm -rf /etc/wireguard
+
+    # OpenVPN
+    if systemctl is-active --quiet openvpn 2>/dev/null; then
+        systemctl stop openvpn; systemctl disable openvpn
+    fi
+    apt-get remove -y openvpn openvpn-auth-pam 2>/dev/null || true
+    rm -rf /etc/openvpn
+
+    # OpenConnect
+    docker rm -f ocserv 2>/dev/null || true
+    systemctl stop ocserv 2>/dev/null || true
+    apt-get remove -y ocserv 2>/dev/null || true
+
+    # X-UI / 3X-UI
+    docker rm -f x-ui 3x-ui 2>/dev/null || true
+    systemctl stop x-ui 2>/dev/null || true
+    rm -rf /usr/local/x-ui /etc/x-ui
+
+    # Marzban
+    [[ -d /docker/marzban ]] && (cd /docker/marzban && docker compose down -v 2>/dev/null || true)
+    rm -rf /docker/marzban
+
+    # SoftEther
+    vpnserver stop 2>/dev/null || true
+    rm -rf /usr/local/vpnserver /var/log/vpnserver
+
+    # Hiddify
+    rm -rf /opt/hiddify
+
+    # Docker
+    docker stop $(docker ps -aq) 2>/dev/null || true
+    docker rm $(docker ps -aq) 2>/dev/null || true
+    curl -fsSL https://get.docker.com | sh -s -- --purge 2>/dev/null || true
+    rm -rf /var/lib/docker /var/lib/containerd /etc/docker
+}
+
+menu_uninstall() {
+    while true; do
+        clear
+        print_header
+        echo -e "${BOLD}Uninstall VPN Services${NC}"
+        echo ""
+        echo "  1)  Back"
+        echo "  2)  Remove WireGuard"
+        echo "  3)  Remove OpenVPN"
+        echo "  4)  Remove OpenConnect (ocserv)"
+        echo "  5)  Remove X-UI / 3X-UI"
+        echo "  6)  Remove Marzban"
+        echo "  7)  Remove SoftEther"
+        echo "  8)  Remove Hiddify"
+        echo "  9)  Remove GOST"
+        echo " 10)  Remove Docker"
+        echo " 11)  Remove ALL (full cleanup)"
+        echo ""
+        read -p "Select option: " choice
+        case $choice in
+            1) return ;;
+            2)
+                print_info "Removing WireGuard..."
+                if systemctl is-active --quiet wg-quick@wg0 2>/dev/null; then
+                    systemctl stop wg-quick@wg0
+                    systemctl disable wg-quick@wg0
+                fi
+                if dpkg -l | grep -q wireguard-tools 2>/dev/null; then
+                    apt-get remove -y wireguard wireguard-tools &>/dev/null || true
+                fi
+                rm -rf /etc/wireguard
+                print_info "WireGuard removed."
+                ;;
+            3)
+                print_info "Removing OpenVPN..."
+                if systemctl is-active --quiet openvpn 2>/dev/null; then
+                    systemctl stop openvpn
+                    systemctl disable openvpn
+                fi
+                if dpkg -l | grep -q openvpn 2>/dev/null; then
+                    apt-get remove -y openvpn openvpn-auth-pam &>/dev/null || true
+                fi
+                rm -rf /etc/openvpn
+                print_info "OpenVPN removed."
+                ;;
+            4)
+                print_info "Removing OpenConnect..."
+                if systemctl is-active --quiet ocserv 2>/dev/null; then
+                    systemctl stop ocserv
+                    systemctl disable ocserv
+                fi
+                if dpkg -l | grep -q ocserv 2>/dev/null; then
+                    apt-get remove -y ocserv &>/dev/null || true
+                fi
+                docker rm -f ocserv 2>/dev/null || true
+                print_info "OpenConnect removed."
+                ;;
+            5)
+                print_info "Removing X-UI / 3X-UI..."
+                if systemctl is-active --quiet x-ui 2>/dev/null; then
+                    systemctl stop x-ui
+                    systemctl disable x-ui
+                fi
+                docker rm -f x-ui 3x-ui 2>/dev/null || true
+                bash <(curl -Ls https://raw.githubusercontent.com/alireza0/x-ui/master/install.sh) --uninstall 2>/dev/null || true
+                bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh) --uninstall 2>/dev/null || true
+                rm -rf /usr/local/x-ui /etc/x-ui
+                print_info "X-UI / 3X-UI removed."
+                ;;
+            6)
+                print_info "Removing Marzban..."
+                if [[ -d /docker/marzban ]]; then
+                    (cd /docker/marzban && docker compose down -v 2>/dev/null || true)
+                    rm -rf /docker/marzban
+                fi
+                print_info "Marzban removed."
+                ;;
+            7)
+                print_info "Removing SoftEther..."
+                if pgrep -x vpnserver &>/dev/null; then
+                    vpnserver stop
+                fi
+                rm -usr/local/vpnserver 2>/dev/null || true
+                rm -rf /usr/local/vpnserver /var/log/vpnserver
+                print_info "SoftEther removed."
+                ;;
+            8)
+                print_info "Removing Hiddify..."
+                if [[ -d /opt/hiddify ]]; then
+                    rm -rf /opt/hiddify
+                fi
+                print_info "Hiddify removed."
+                ;;
+            9)
+                print_info "Removing GOST..."
+                if command -v gost &>/dev/null; then
+                    bash <(curl -fsSL https://github.com/samsesh/gost/raw/master/install.sh) --uninstall 2>/dev/null || true
+                fi
+                print_info "GOST removed."
+                ;;
+            10)
+                print_info "Removing Docker..."
+                if command -v docker &>/dev/null; then
+                    docker stop $(docker ps -aq) 2>/dev/null || true
+                    docker rm $(docker ps -aq) 2>/dev/null || true
+                    curl -fsSL https://get.docker.com | sh -s -- --purge 2>/dev/null || true
+                    apt-get remove -y docker docker-engine docker.io containerd runc &>/dev/null || true
+                    rm -rf /var/lib/docker /var/lib/containerd /etc/docker
+                fi
+                print_info "Docker removed."
+                ;;
+            11)
+                print_warn "This will remove ALL VPN services and Docker. Continue?"
+                read -p "Type 'YES' to confirm: " confirm
+                if [[ "$confirm" == "YES" ]]; then
+                    _uninstall_all
+                    print_info "Full cleanup complete."
+                else
+                    print_info "Cancelled."
+                fi
+                ;;
+            *) print_error "Invalid option" ;;
+        esac
+        echo ""
+        read -p "Press Enter to continue..."
+    done
+}
+
+# ─────────────────────────────────────────────────────
+# XanMod Kernel
+# ─────────────────────────────────────────────────────
+menu_xanmod() {
+    while true; do
+        clear
+        print_header
+        echo -e "${BOLD}XanMod Kernel${NC}"
+        echo ""
+        echo "  1)  Back"
+        echo "  2)  Check Secure Boot Status"
+        echo "  3)  Install XanMod Kernel"
+        echo ""
+        read -p "Select option: " choice
+        case $choice in
+            1) return ;;
+            2)
+                if mokutil --sb-state 2>/dev/null | grep -q "SecureBoot enabled"; then
+                    print_error "Secure Boot is ENABLED"
+                    echo "  Please disable Secure Boot in BIOS/UEFI before installing XanMod."
+                    echo "  After disabling, reboot and run this tool again."
+                else
+                    print_success "Secure Boot is disabled or not present"
+                    echo "  Safe to install XanMod kernel."
+                fi
+                ;;
+            3)
+                if mokutil --sb-state 2>/dev/null | grep -q "SecureBoot enabled"; then
+                    print_error "Cannot install: Secure Boot is ENABLED"
+                    echo "  Disable Secure Boot in BIOS/UEFI first."
+                    continue
+                fi
+                print_info "Installing XanMod kernel..."
+                install_pkg curl gnupg
+                curl -fsSL https://dl.xanmod.org/gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/xanmod.gpg
+                echo 'deb [signed-by=/usr/share/keyrings/xanmod.gpg] http://deb.xanmod.org releases main' | sudo tee /etc/apt/sources.list.d/xanmod-release.list
+                sudo apt update && sudo apt install -y linux-xanmod-edge-x64v3
+                print_success "XanMod installed. Reboot to activate."
+                read -p "Reboot now? [y/N]: " reboot_choice
+                if [[ "$reboot_choice" =~ ^[Yy]$ ]]; then
+                    sudo reboot
+                fi
+                ;;
+            *) print_error "Invalid option" ;;
+        esac
+        echo ""
+        read -p "Press Enter to continue..."
+    done
+}
+
+# ─────────────────────────────────────────────────────
+# BBR3
+# ─────────────────────────────────────────────────────
+enable_bbr3() {
+    print_info "Enabling BBR3..."
+    sudo apt update && sudo apt install -y linux-headers-generic linux-generic linux-modules-extra-$(uname -r)
+    echo "tcp_bbr" | sudo tee /etc/modules-load.d/bbr.conf
+    sudo modprobe tcp_bbr
+    sudo sysctl -w net.core.default_qdisc=fq
+    sudo sysctl -w net.ipv4.tcp_congestion_control=bbr
+    sudo tee -a /etc/sysctl.conf <<EOF
+net.core.default_qdisc = fq
+net.ipv4.tcp_congestion_control = bbr
+EOF
+    sudo sysctl -p
+    print_success "BBR3 enabled. Reboot to apply all changes."
+    read -p "Reboot now? [y/N]: " reboot_choice
+    if [[ "$reboot_choice" =~ ^[Yy]$ ]]; then
+        sudo reboot
+    fi
+}
+
+menu_bbr3() {
+    while true; do
+        clear
+        print_header
+        echo -e "${BOLD}BBR3 TCP Congestion Control${NC}"
+        echo ""
+        echo "  1)  Back"
+        echo "  2)  Current BBR Status"
+        echo "  3)  Enable BBR3"
+        echo ""
+        read -p "Select option: " choice
+        case $choice in
+            1) return ;;
+            2)
+                echo "Current congestion control: $(sysctl -n net.ipv4.tcp_congestion_control)"
+                echo "Available modules: $(modprobe -n -v tcp_bbr 2>&1 || echo 'not available')"
+                ;;
+            3)
+                enable_bbr3
+                ;;
+            *) print_error "Invalid option" ;;
+        esac
+        echo ""
+        read -p "Press Enter to continue..."
+    done
+}
+
+# ─────────────────────────────────────────────────────
+# Proxy & Tools Menu
+# ─────────────────────────────────────────────────────
+menu_proxy_tools() {
+    while true; do
+        clear
+        print_header
+        echo -e "${BOLD}Proxy & Tools${NC}"
+        echo ""
+        echo "  1)  Back"
+        echo "  2)  Telegram MTProxy [Docker]"
+        echo "  3)  SOCKS5/HTTP Proxy [Docker]"
+        echo "  4)  Install GOST"
+        echo "  5)  Install CFWarp"
+        echo "  6)  Install WARP Proxy (port 4000)"
+        echo ""
+        read -p "Select option: " choice
+        case $choice in
+            1) return ;;
+            2)
+                if confirm_install "Telegram MTProxy"; then
+                    docker_check
+                    print_info "Installing Telegram MTProxy..."
+
+                    read -p "Install path [/docker/mtproxy]: " mtproxy_path
+                    mtproxy_path="${mtproxy_path:-/docker/mtproxy}"
+                    mkdir -p "$mtproxy_path"
+                    git clone https://github.com/iShift/docker-compose-mtproxy.git "$mtproxy_path"
+
+                    read -p "Port [443]: " mtproxy_port
+                    mtproxy_port="${mtproxy_port:-443}"
+                    regex='^[0-9]+$'
+                    if ! [[ "$mtproxy_port" =~ $regex ]]; then
+                        print_error "Port must be a number"; continue
+                    fi
+
+                    read -p "Tag (empty=random): " mtproxy_tag
+                    mtproxy_tag="${mtproxy_tag:-$(openssl rand -hex 16)}"
+                    read -p "Secret (empty=random): " mtproxy_secret
+                    mtproxy_secret="${mtproxy_secret:-$(openssl rand -hex 32)}"
+
+                    echo "TAG=$mtproxy_tag" > "$mtproxy_path/config.env"
+                    echo "SECRET=$mtproxy_secret" >> "$mtproxy_path/config.env"
+                    sed -i "s/443:443/$mtproxy_port:443/g" "$mtproxy_path/docker-compose.yml"
+
+                    (cd "$mtproxy_path" && docker compose up -d)
+                    print_info "MTProxy installed!"
+                    echo "  Tag:    $mtproxy_tag"
+                    echo "  Secret: $mtproxy_secret"
+                fi
+                ;;
+            3)
+                if confirm_install "SOCKS5/HTTP Proxy"; then
+                    docker_check
+                    print_info "Installing SOCKS5/HTTP Proxy..."
+
+                    read -p "SOCKS port [3128]: " proxy_socks
+                    proxy_socks="${proxy_socks:-3128}"
+                    read -p "HTTP port [1080]: " proxy_http
+                    proxy_http="${proxy_http:-1080}"
+                    read -p "Username [lazyvpn]: " proxy_user
+                    proxy_user="${proxy_user:-lazyvpn}"
+                    read -p "Password [lazyvpn]: " proxy_pass
+                    proxy_pass="${proxy_pass:-lazyvpn}"
+
+                    docker run --rm -d \
+                        -p "$proxy_socks":3128/tcp \
+                        -p "$proxy_http":1080/tcp \
+                        -e PROXY_LOGIN="$proxy_user" \
+                        -e PROXY_PASSWORD="$proxy_pass" \
+                        -e PRIMARY_RESOLVER=2001:4860:4860::8888 \
+                        --name lazy-proxy --restart unless-stopped \
+                        tarampampam/3proxy:latest
+
+                    print_info "Proxy installed!"
+                    echo "  SOCKS5: $proxy_user:$proxy_pass@<your-ip>:$proxy_socks"
+                    echo "  HTTP:   $proxy_user:$proxy_pass@<your-ip>:$proxy_http"
+                fi
+                ;;
+            4)
+                if command -v gost &>/dev/null; then
+                    print_info "GOST is already installed"
+                else
+                    print_info "Installing GOST..."
+                    bash <(curl -fsSL https://github.com/samsesh/gost/raw/master/install.sh) --install
+                fi
+                ;;
+            5)
+                print_info "Installing CFWarp..."
+                wget -N https://gitlab.com/rwkgyg/CFwarp/raw/main/CFwarp.sh && bash CFwarp.sh <<< $'1\n1\n3'
+                ;;
+            6)
+                print_info "Installing WARP Proxy..."
+                bash <(curl -sSL https://gist.githubusercontent.com/hamid-gh98/dc5dd9b0cc5b0412af927b1ccdb294c7/raw/install_warp_proxy.sh)
                 ;;
             *) print_error "Invalid option" ;;
         esac
@@ -596,9 +1098,13 @@ menu_server_tools() {
         echo "  1)  Back"
         echo "  2)  Ubuntu Optimizer"
         echo "  3)  Install Docker"
-        echo "  4)  Install GOST"
-        echo "  5)  Install CFWarp"
-        echo "  6)  Install WARP Proxy (port 4000)"
+        echo "  4)  Install XanMod Kernel"
+        echo "  5)  Enable BBR3"
+        echo "  6)  Install GOST"
+        echo "  7)  Install CFWarp"
+        echo "  8)  Install WARP Proxy (port 4000)"
+        echo "  9)  Proxy & Tools"
+        echo " 10)  Uninstall VPN Services"
         echo ""
         read -p "Select option: " choice
         case $choice in
@@ -610,7 +1116,9 @@ menu_server_tools() {
             3)
                 docker_check
                 ;;
-            4)
+            4) menu_xanmod ;;
+            5) menu_bbr3 ;;
+            6)
                 if command -v gost &>/dev/null; then
                     print_info "GOST is already installed"
                 else
@@ -618,14 +1126,16 @@ menu_server_tools() {
                     bash <(curl -fsSL https://github.com/samsesh/gost/raw/master/install.sh) --install
                 fi
                 ;;
-            5)
+            7)
                 print_info "Installing CFWarp..."
                 wget -N https://gitlab.com/rwkgyg/CFwarp/raw/main/CFwarp.sh && bash CFwarp.sh <<< $'1\n1\n3'
                 ;;
-            6)
+            8)
                 print_info "Installing WARP Proxy..."
                 bash <(curl -sSL https://gist.githubusercontent.com/hamid-gh98/dc5dd9b0cc5b0412af927b1ccdb294c7/raw/install_warp_proxy.sh)
                 ;;
+            9) menu_proxy_tools ;;
+            10) menu_uninstall ;;
             *) print_error "Invalid option" ;;
         esac
         echo ""
